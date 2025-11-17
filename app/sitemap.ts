@@ -22,7 +22,16 @@ async function getNoteSlugs(dir: string) {
 
 export default async function sitemap() {
   const notesDirectory = path.join(process.cwd(), 'app', 'n');
-  const slugs = await getNoteSlugs(notesDirectory);
+  let slugs: string[] = [];
+
+  try {
+    const stats = await fs.stat(notesDirectory);
+    if (stats.isDirectory()) {
+      slugs = await getNoteSlugs(notesDirectory);
+    }
+  } catch (error) {
+    slugs = [];
+  }
 
   const notes = slugs.map((slug) => ({
     url: `${SITE_URL}/n/${slug}`,
