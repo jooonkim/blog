@@ -9,8 +9,16 @@ export const sql = postgres(process.env.POSTGRES_URL!, {
 const nextConfig: NextConfig = {
   pageExtensions: ['mdx', 'ts', 'tsx'],
   async redirects() {
+    const staticRedirects = [
+      {
+        source: '/soju',
+        destination: '/chasing-soju.pdf',
+        permanent: true
+      }
+    ];
+
     if (!process.env.POSTGRES_URL) {
-      return [];
+      return staticRedirects;
     }
 
     let redirects = await sql`
@@ -18,11 +26,14 @@ const nextConfig: NextConfig = {
       FROM redirects;
     `;
 
-    return redirects.map(({ source, destination, permanent }) => ({
-      source,
-      destination,
-      permanent: !!permanent
-    }));
+    return [
+      ...staticRedirects,
+      ...redirects.map(({ source, destination, permanent }) => ({
+        source,
+        destination,
+        permanent: !!permanent
+      }))
+    ];
   },
   // Note: Using the Rust compiler means we cannot use
   // rehype or remark plugins. If you need them, remove
