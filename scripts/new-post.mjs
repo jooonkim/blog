@@ -40,6 +40,8 @@ Content goes here.
 
 More content here.
 
+**Originally published: **
+
 `;
 
 async function main() {
