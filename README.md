@@ -28,6 +28,16 @@ To create a new post easily, run the following script:
 npm run new-post -- slug "Title"
 ```
 
+To preview
+```bash
+npm run dev
+```
+
+To build
+```bash
+npm run build
+```
+
 ## Database (Optional)
 
 Create a `.env.local` file with your `POSTGRES_URL` environment variable to store redirects.
