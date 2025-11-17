@@ -39,10 +39,10 @@ export default function RootLayout({
 
 function Footer() {
   const links = [
-    { name: '@joooonkim', url: 'https://x.com/joooonkim' },
-    { name: 'instagram', url: 'https://www.instagram.com/jooonkim' },
+    { name: 'twitter', url: 'https://x.com/joooonkim' },
     { name: 'linkedin', url: 'https://www.linkedin.com/in/joonkimamherst' },
-    { name: 'github', url: 'https://github.com/jooonkim' }
+    { name: 'github', url: 'https://github.com/jooonkim' },
+    { name: 'instagram', url: 'https://www.instagram.com/jooonkim' }
   ];
 
   return (
