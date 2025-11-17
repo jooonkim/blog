@@ -18,6 +18,8 @@
 html {
   min-width: 360px;
   scrollbar-gutter: stable;
+  font-size: 18px;
+  line-height: 1.6;
 }
 
 body {
@@ -111,4 +113,11 @@ table {
   overflow-x: auto;
   white-space: nowrap;
   text-align: left;
+}
+
+@media (max-width: 640px) {
+  html {
+    font-size: 19px;
+    line-height: 1.7;
+  }
 }
