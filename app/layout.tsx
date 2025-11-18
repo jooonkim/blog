@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     default: 'Joon Kim',
     template: '%s | Joon Kim'
   },
-  description: 'My portfolio, blog, and personal website.'
+  description: 'Seller & Builder.'
 };
 
 export default function RootLayout({
