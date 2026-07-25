@@ -9,102 +9,126 @@ export const metadata = {
 
 <br />
 
-There is a window of opportunity opening for people who know how to adapt foundation models to messy, real-world workflows. Getting this right requires an understanding of how work actually happens, designing specific evaluations, and establishing tight feedback loops to continuously improve the system.
+# A Playbook for Capturing Enterprise Tacit Knowledge
 
-Most discussions about enterprise AI center around chat interfaces pulling from product documentation. But there is a hard ceiling on what a foundation model can achieve when it only reads public manuals. The real value comes from capturing "tacit knowledge."
+A structural limitation of current enterprise AI deployment is the assumption that out-of-the-box frontier models will autonomously solve complex workflows. State-of-the-art models are incredibly capable, but when dropped into an enterprise environment, they hit a strict performance ceiling. They default to generic best practices because their reasoning is constrained by static documentation. 
 
-Tacit knowledge is the unwritten, highly contextual expertise held by the most senior professionals in a field. In enterprise sales, for example, a veteran representative does not just follow a rigid playbook. They know how to handle specific objections, when to make strategic trade-offs, and how to read the room during a negotiation. That information exists purely as intuition built up over years of repetition. It rarely makes it into a training manual.
+The most valuable asset in any organization isn't written in a manual. It is "tacit knowledge"—the unwritten heuristics, objection-handling strategies, and situational intuition held by a handful of veteran employees. In my day-to-day work talking to business leaders and executives, this is the most explicit pain point I hear: when veteran personnel leave, that critical corpus of knowledge walks out the door, leaving new hires with impossible onboarding curves.
 
-If you want an AI system to perform at an expert level, you have to build systems that extract and codify this intuition. What follows is the exact step-by-step playbook we used to adapt foundation models to complex sales workflows, and instructions on how you can build the same architecture in your own company.
+The true competitive advantage in enterprise AI isn't simply plugging into the largest general-purpose model. It lies in building architectures that systematically extract this tacit knowledge from your top performers and using it to train specialized, cost-effective models structurally aligned to your business. These custom systems not only outperform generic models on domain-specific tasks, but they explicitly preserve your institutional knowledge, serving as an interactive training ground to rapidly accelerate the onboarding of new hires. 
 
----
-
-### Step 1: Building Scenario-Driven Evals (Archetypes)
-
-**What We Did:**
-You cannot improve what you cannot measure. Before we ever wrote a prompt or built an agent, we designed our evaluation suite. We constructed detailed client profiles, which we called "archetypes." 
-
-An archetype is not a simplistic buyer persona (e.g., "Digital Native SaaS Company"). It represents a thorny, real-world scenario with specific constraints: current tech stack setups, strict budget limits, historical performance metrics, and compliance requirements. By defining these states in strict detail, we created a standard, reproducible test suite. Instead of asking the model generic questions, we forced it to generate strategic plans tailored precisely to these constrained environments, giving us our "baseline" AI output.
-
-**How You Can Do This in Your Company:**
-Do not evaluate your AI by throwing casual, top-of-mind prompts at it. Build a structured test suite first. You should aim to build a diverse baseline of **15 to 20 detailed archetypes**.
-
-Here is how you figure out what those archetypes should actually be:
-*   **Action (The Data-Driven Approach):** Look at your ground truth—your CRM data. Export a CSV of your closed-won and closed-lost deals from the last 12 months (e.g., from Salesforce or HubSpot). Filter for key variables like Deal Size, Industry, Tech Stack, Loss Reason, and Sales Cycle Length. You don't need a data science team to analyze this; just pass the CSV into an LLM with code execution or data analysis capabilities. Prompt it to: *"Identify the 15 most distinct customer clusters based on these variables, and synthesize each cluster into a detailed, constrained mock customer profile."*
-*   **Action (The Backup Plan):** If your CRM hygiene is poor and the data is unreliable, default to human memory. Gather your sales leaders and ask them to manually construct the "thorniest" scenarios they face. Make sure you actively force a diverse range—do not let them just describe the ideal 'happy path' customer. You need the nightmare enterprise account with strict legal compliance, and the scrappy mid-market client with zero budget but high expectations.
-*   **Pro-Tip:** Dig into recent failures. Ask your team for the three hardest deals they definitively *lost* last quarter. Scrub the personal data and turn those exact scenarios into archetypes. This grounds your evaluation in harsh reality, instantly exposing when the AI gives generic advice instead of navigating actual friction points.
+The following details the design decisions we made to adapt foundation models into these complex workflows, shifting them from generic chatbots into agents capable of independently strategizing against real constraints.
 
 ---
 
-### Step 2: The Expert Interview and Capturing "Delta Rules"
+### 1. Defining Scenario-Driven Evaluation Suites (Archetypes)
 
 **What We Did:**
-Once the foundation model generated its generic baseline recommendations for the archetypes, we put those baselines in front of our top domain experts. Their job was to ruthlessly critique the AI's output.
+Development began by constructing a standardized evaluation suite. We defined detailed client profiles called "archetypes." An archetype is a rigorously defined state environment with specific constraints: current technical infrastructure, strict budget parameters, historical performance metrics, and compliance requirements.
 
-When an expert identified an error, we extracted the logic behind their critique into what we call "delta rules." To avoid turning the model into a rigid decision tree, we structured these rules carefully. For example, when we were creating a specialized agent to scale the tacit knowledge of our senior sellers, we categorized those rules into two distinct buckets:
-1.  **Universal Rules:** These applied every time the agent evaluated an account. For example, our senior sellers intuitively knew that a campaign would fail if it wasn't funded to a specific mathematical threshold. We programmed the agent to always calculate a target acquisition cost first and strictly enforce a mandatory daily budget ratio based on that cost. If a mock client prototype failed that mathematical check, the agent was instructed to pivot the entire strategic goal rather than proposing an underfunded, doomed plan.
-2.  **Conditional Rules:** These applied only when triggered by specific archetype constraints. For instance, if the mock client operated in a highly regulated industry vertical, the agent was programmed to fundamentally alter its audience targeting recommendations to account for strict compliance policies, shifting instead to privacy-safe, offline-measured alternatives.
+Rather than evaluating the model on generic prompts, the system was forced to generate strategic plans tailored precisely to these constrained environments to establish a performance baseline.
 
-**How You Can Do This in Your Company:**
-Do not ask your experts to "write down their rules." They don't know their own rules—they just react to situations. You have to force a reaction.
-*   **Action:** Schedule a live working session with your top performer. Play the role of a junior employee and have the AI generate a baseline plan live on the call. Ask the expert to critique the AI's output line by line.
-*   **Pro-Tip (Audio is King):** Record the meeting and turn transcription on. Experts talk much faster and more naturally than they type. After the meeting, dump the entire raw transcript into a foundation model and use it to extract the delta rules.
-*   **The Extraction Prompt:** Here is the exact prompt you can feed to your LLM assistant alongside the transcript of the interview:
+**How You Can Do This:**
+A robust evaluation suite requires 15 to 20 highly diverse archetypes.
+*   **Data Extraction:** To prevent bias, archetypes should be derived from empirical CRM data. Exporting historical deal data (e.g., closed-won and closed-lost accounts) and clustering by variables such as deal size, industry, and tech stack provides a ground-truth distribution.
+*   **Synthesis Prompt:** Pass the exported CSV into an LLM with code execution or data analysis capabilities, using the following prompt:
 
 ```text
-You are an expert knowledge extractor. We are reviewing a transcript where a top-performing human expert is critiquing a generic business plan generated by an AI.
+You are an expert data analyst. I have attached a CSV of our historical 12-month CRM data.
+Please perform the following operations:
+1. Cluster this data into the 15 most distinct customer segments based on deal size, industry, current tech stack, and win/loss reason.
+2. For each cluster, synthesize a highly detailed, constrained "Archetype" client profile.
+3. Ensure each Archetype explicitly lists its hard constraints: strict budgets, rigid compliance requirements, and technical debt. Do not create "happy path" profiles; force realistic constraints.
+```
+*   **Edge Case Injection:** If empirical data is unavailable or noisy, manual construction by domain experts is required. It is critical to enforce the creation of boundary-condition scenarios (e.g., accounts with strict legal compliance or severe budget constraints) rather than ideal "happy paths." Evaluating against historical failures is an effective method to expose when a model defaults to generic advice.
 
-Your goal is to extract the "Delta Rules"—the specific, conditional logic the human used to correct the AI's mistakes. 
+---
 
-For every critique the human gives, extract it into this format:
-- TRIGGER CONDITION: (What specific scenario, client type, or data constraint caused the expert to apply this rule?)
-- ACTION RULE: (What exactly should the AI recommend or do instead of the generic advice?)
-- RATIONALE: (Why does this work better in the real world?)
+### 2. Extracting Conditional Logic (Delta Rules)
 
-Do not capture general advice or high-level best practices. Only capture conditional logic that directly dictates how the system should change its output based on real-world constraints.
+**What We Did:**
+Once the foundation model generated baseline outputs for the evaluation suite, domain experts were utilized to critique the outputs. The logic underlying these human critiques was extracted into a structured format called "Delta Rules."
+
+To maintain system flexibility and prevent the model from degrading into a rigid decision tree, rules were isolated into two categories:
+1.  **Universal Rules:** System-wide invariants. For example, enforcing a mandatory daily budget ratio calculation before any strategic planning occurs. If a mock client prototype fails this mathematical check, the agent pivots the strategy.
+2.  **Conditional Rules:** Trigger-based logic activated only by specific archetype constraints. For instance, if an archetype indicates a highly regulated industry, the agent fundamentally alters its targeting parameters to comply with privacy regulations.
+
+**How You Can Do This:**
+Extracting heuristic logic requires live, conversational pressure-testing rather than asking experts to write documentation. 
+*   **Live Critique:** Have the domain expert review the AI's baseline output line-by-line during a recorded session.
+*   **Automated Extraction:** Process the transcript through an LLM to extract the Delta Rules. The extraction prompt must enforce a strict schema:
+
+```text
+You are an expert knowledge extractor analyzing a transcript of a human expert critiquing an AI-generated business plan.
+
+Extract the "Delta Rules" (conditional logic) into the following schema:
+- TRIGGER CONDITION: What specific scenario or data constraint invoked this rule?
+- ACTION RULE: What functional change must the AI make to its output logic?
+- RATIONALE: Why does this heuristic improve the real-world outcome?
+
+Exclude high-level best practices. Only capture conditional logic that dictates how the system alters its output based on constraints.
 ```
 
 ---
 
-### Step 3: Global Rule Propagation and Regression Testing
+### 3. Global Rule Propagation and Regression Testing
 
 **What We Did:**
-Capturing rules is only half the battle; they have to apply consistently. We built an automated pipeline to handle this. Whenever an expert identified a new delta rule, the system codified it into a central logic repository (our master prompt framework). 
+To enforce rule consistency, the system utilized an automated propagation pipeline. When a new Delta Rule was added to the central logic repository, a global propagation event was triggered. The system executed the updated prompt architecture against all archetypes in the evaluation suite, regenerating all baselines. This ensured that an insight derived from one edge-case scenario improved the agent's baseline reasoning across the entire corpus.
 
-Once updated, the system triggered a global propagation event. It forcefully ran the model against all archetypes in the evaluation suite, regenerating every single baseline document on disk. This meant an insight gained from one edge-case scenario automatically improved the agent's reasoning across all other scenarios in the corpus. 
+**How You Can Do This:**
+Prompt architecture must be treated like software code, requiring strict regression testing.
+*   **Token Economics & SLMs:** Regenerating complex archetypes through massive models continually degrades token economics. To control compute costs at scale, Small Language Models (SLMs) can be deployed as fast evaluation gates. Their job is to quickly scan the generated baselines and detect if anything is fundamentally broken. If the SLM detects a logic break, the failure is routed back to a larger, expensive frontier model to execute the fix.
+*   **SLM Evaluation Prompt:** Implement a low-parameter model with a breakage-detection prompt similar to this:
 
-**How You Can Do This in Your Company:**
-Treat your AI prompt like software code. You need regression testing.
-*   **Action:** Keep a central, version-controlled document (a master prompt text file) of all your Delta Rules. Whenever you add a new rule from an expert interview, do not just assume it works. Rerun the updated prompt against your entire suite of 10-15 Archetypes (from Step 1) and read the outputs. 
-*   **Pro-Tip (Watch Out For The Happy Path):** Experts intuitively describe the ideal scenario. When interviewing them, actively push them on failure states. Ask, "What if the client pushes back on that?" or "What if their data pipeline is broken?" If you don't encode these failure states, your global propagation will result in an AI that only knows how to win deals when everything goes perfectly.
+```text
+You are an automated evaluation gate. Review the attached AI-generated strategic plan against the client's hard constraints.
+Your only job is to detect if the baseline logic is broken. 
+Answer YES if you detect any of the following breakages:
+1. The plan violates the mathematical budget constraints.
+2. The plan references non-compliant platforms.
+3. The output formatting is completely broken.
+
+If any answer is YES, output "BROKEN" and list the specific failure so the frontier model can execute a fix. If no breakages are detected, output "PASS".
+```
+*   **Failure State Testing:** When updating the central repository, it is critical to test against failure states. If the system is not explicitly evaluated on broken data pipelines or client pushback, the model will overfit to ideal conditions.
 
 ---
 
-### Step 4: Persona-Based Agent Swarms
+### 4. Resolving Context Limits via Agent Swarms
 
 **What We Did:**
-We quickly realized that a single model burdened by a massive, growing set of rules becomes brittle, confused, and prone to hallucinations. It simply could not balance the conflicting priorities of different sales motions.
+As the central repository of rules expanded, a single unified model became brittle, demonstrating degraded reasoning and increased hallucination rates. It could no longer balance the conflicting priorities of different workflow domains.
 
-To solve this, we decoupled the domain. Instead of deploying one general-purpose expert agent, we built individual agents for distinct subject matters: one agent managed video strategy, another persona strictly handled privacy-measurement pipelines, and another managed upper-funnel search targeting. 
+To resolve this, the architecture was decoupled into specialized agents. Distinct personas were built for specific subject matters (e.g., video strategy, privacy-measurement pipelines). When evaluating a complex archetype, these agents operated as a swarm. 
 
-When faced with a complex client archetype, these agents operated as a swarm. They collaborated, debated trade-offs, and critiqued each other’s strategic plans before consolidating the final output. 
+By utilizing State-of-the-art (SOTA) models for the orchestration and reasoning layer, the agents reliably collaborated, debated trade-offs, and rigorously critiqued each other’s strategic plans before consolidating a final output.
 
-**How You Can Do This in Your Company:**
-*   **Action:** When your master prompt file gets too long and the AI starts contradicting itself, it is time to splinter the persona. Create a separate prompt and instruction set for each specific discipline.
-*   **Pro-Tip (Agent Debate):** One of the most effective ways to uncover edge cases is to have AI agents talk to each other. Give Agent A the goal of maximizing lead volume, and Agent B the goal of minimizing legal risk. Feed them a client scenario and let them debate. Reviewing the transcript of that debate will highlight the exact friction points your human teams are likely struggling with daily.
+**How You Can Do This:**
+*   **Domain Splintering:** Once prompt context size degrades output quality, the persona must be splintered into specific disciplines with isolated instruction sets.
+*   **Adversarial Debate:** Programming agents with conflicting objectives (e.g., Agent A maximizes volume; Agent B minimizes risk) forces them to navigate complex friction points natively, exposing edge cases that single-agent architectures miss.
+*   **The Swarm Debate Prompt:** To initiate this clash, instantiate two distinct agents with opposing operational imperatives. For the risk-mitigation persona, use a prompt like this:
+
+```text
+You are the Compliance Persona operating within an agent swarm. Your sole functional objective is to minimize institutional risk.
+Another agent (the Growth Persona) has proposed the attached strategic plan. 
+Review their plan and aggressively critique it from a purely risk-averse perspective. 
+Identify every edge case, compliance violation, or overly optimistic assumption. 
+Force the Growth Persona to amend their plan until you determine the risk is negligible. Do not compromise.
+```
 
 ---
 
-### The Outputs and Second-Order Effects
+### System Outcomes and Second-Order Effects
 
-By iterating through this engine, the AI's output shifted drastically. The model went from generating textbook advice to producing strategic plans that closely mirrored the subjective, nuanced opinions of our top-performing staff.
+By iterating through this calibration engine, the AI's output shifted from generic best practices to highly contextual strategic plans matching the heuristic judgment of top-performing staff.
 
-If you commit to this scaffolding, two massive use cases open up:
+This architecture enables two significant secondary applications:
 
-1.  **Accelerated Onboarding:** Junior staff can now pressure-test their strategies by role-playing with an agent that has absorbed the expertise of their senior peers. They receive immediate, harsh feedback without consuming human bandwidth.
-2.  **High-Fidelity Fine-Tuning Data:** Every time a human expert corrects a baseline, you capture the original prompt, the model's chain of thought, and the human-aligned golden response. This generates the exact dataset needed to fine-tune future models exclusively for your business.
+1.  **Accelerated Onboarding:** Junior staff can pressure-test strategies in a sandbox environment by role-playing with an agent that has absorbed senior-level heuristics.
+2.  **Producing Gold-Layer Data:** Every expert-corrected baseline captures the original prompt, the model's chain of thought, and the human-aligned golden response. This loop autonomously generates pristine, gold-layer data—the exact high-fidelity dataset required for downstream fine-tuning of future models.
 
-I believe that adapting AI to enterprise workflows is not simply a matter of prompt engineering. Rather, it is about building the systems that continuously ingest, codify, and scale human expertise. It is a step towards pushing beyond the limitations of generic models to make AI useful for you and your business.
+Adapting AI to enterprise workflows requires building deterministic systems that continuously ingest, codify, and scale human expertise. Establishing these localized feedback loops is the necessary path toward pushing beyond the limitations of generic models.
 
 **Originally published: 2026-07-25**
 
