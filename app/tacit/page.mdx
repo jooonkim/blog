@@ -52,19 +52,30 @@ To maintain system flexibility and prevent the model from degrading into a rigid
 2.  **Conditional Rules:** Trigger-based logic activated only by specific archetype constraints. For instance, if an archetype indicates a highly regulated industry, the agent fundamentally alters its targeting parameters to comply with privacy regulations.
 
 **How You Can Do This:**
-Extracting heuristic logic requires live, conversational pressure-testing rather than asking experts to write documentation. 
-*   **Live Critique:** Have the domain expert review the AI's baseline output line-by-line during a recorded session.
+Extracting heuristic logic requires live, conversational pressure-testing rather than asking experts to write documentation. I chose to elicit this tacit feedback verbally in a live interview because real-time critique surfaces instinctive, context-sensitive judgment that experts often omit when asked to formalize their knowledge in writing. It also creates room to probe the reasoning behind an initial reaction, clarify exceptions, and identify the subtle cues that change how a recommendation should be made.
+*   **Live Critique:** Have the domain expert review the AI's baseline output line-by-line during a recorded session. Instruct the expert to imagine they are the salesperson's manager and that the AI is a junior sales representative preparing a pitch for this specific client archetype. Ask them to critique the pitch exactly as they would in a real coaching session: what they would correct, what signals they noticed, and how they would expect the representative to adapt.
 *   **Automated Extraction:** Process the transcript through an LLM to extract the Delta Rules. The extraction prompt must enforce a strict schema:
 
 ```text
 You are an expert knowledge extractor analyzing a transcript of a human expert critiquing an AI-generated business plan.
 
-Extract the "Delta Rules" (conditional logic) into the following schema:
-- TRIGGER CONDITION: What specific scenario or data constraint invoked this rule?
-- ACTION RULE: What functional change must the AI make to its output logic?
-- RATIONALE: Why does this heuristic improve the real-world outcome?
+Extract the expert's feedback into two distinct categories:
 
-Exclude high-level best practices. Only capture conditional logic that dictates how the system alters its output based on constraints.
+1. UNIVERSAL RULES
+Capture behaviors or standards that should apply across nearly all instances of this client archetype, regardless of the specific scenario.
+For each rule, provide:
+- UNIVERSAL STANDARD: What must the AI consistently do or avoid?
+- RATIONALE: Why should this behavior apply across nearly all instances of the archetype?
+
+2. CONDITIONAL RULES
+Capture trigger-condition-response logic that applies only when a specific constraint, cue, or scenario is present.
+For each rule, provide:
+- WHEN IT APPLIES: What client context or condition makes this rule relevant?
+- OBSERVABLE SIGNAL: What concrete evidence in the archetype, client behavior, or available data activates the rule?
+- PITCH RESPONSE: How should the AI change the pitch once the signal is observed?
+- RATIONALE: Why does this adaptation improve the real-world outcome?
+
+Do not misclassify generic advice as a universal rule. A universal rule must be consistently useful across nearly all instances of the archetype. Do not state a conditional rule without an observable activation signal and a specific change to the pitch. Preserve meaningful exceptions or uncertainty expressed by the expert.
 ```
 
 ---
@@ -87,7 +98,14 @@ Answer YES if you detect any of the following breakages:
 2. The plan references non-compliant platforms.
 3. The output formatting is completely broken.
 
-If any answer is YES, output "BROKEN" and list the specific failure so the frontier model can execute a fix. If no breakages are detected, output "PASS".
+If any answer is YES, output "BROKEN" and provide a repair handoff for the frontier model with:
+- SPECIFIC FAILURE: Identify the exact constraint, compliance requirement, or formatting rule that was violated.
+- REQUIRED CORRECTION: Instruct the frontier model how the strategic plan must change to resolve the failure.
+- PRESERVE: Identify any valid parts of the plan that should remain unchanged.
+
+The frontier model must revise the plan to satisfy the violated constraint, remove or replace any non-compliant recommendation, and repair broken formatting without unnecessarily rewriting valid strategy. It must then return the corrected plan for evaluation against the same client constraints.
+
+If no breakages are detected, output "PASS".
 ```
 *   **Failure State Testing:** When updating the central repository, it is critical to test against failure states. If the system is not explicitly evaluated on broken data pipelines or client pushback, the model will overfit to ideal conditions.
 
@@ -129,4 +147,3 @@ This architecture enables two significant secondary applications:
 Adapting AI to enterprise workflows requires building deterministic systems that continuously ingest, codify, and scale human expertise. Establishing these localized feedback loops is the necessary path toward pushing beyond the limitations of generic models.
 
 **Originally published: 2026-07-25**
-
