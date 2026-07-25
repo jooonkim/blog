@@ -66,13 +66,13 @@ pre code {
   border: none;
   font-size: 14px;
   line-height: 1.5;
-  color: white;
+  color: var(--sh-class);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
 
 pre code span {
-  color: white !important;
+  color: var(--sh-class) !important;
   font-weight: 500;
 }
 
