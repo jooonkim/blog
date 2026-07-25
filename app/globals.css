@@ -66,10 +66,14 @@ pre code {
   border: none;
   font-size: 14px;
   line-height: 1.5;
+  color: white;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
-pre code > span .sh__token--identifier {
+pre code span {
   color: white !important;
+  font-weight: 500;
 }
 
 code:not(pre code) span {
@@ -89,10 +93,6 @@ code:not(pre code) span {
   code:not(pre code) span {
     color: var(--color-zinc-100) !important;
   }
-}
-
-pre code span {
-  font-weight: 500;
 }
 
 hr {

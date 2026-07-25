@@ -2,6 +2,7 @@ import './globals.css';
 import type { Metadata } from 'next';
 import { STIX_Two_Text } from 'next/font/google';
 import { Analytics } from '@vercel/analytics/react';
+import Link from 'next/link';
 
 const stixTwoText = STIX_Two_Text({
   subsets: ['latin'],
@@ -34,6 +35,15 @@ export default function RootLayout({
       <body className={`${stixTwoText.className} antialiased tracking-tight`}>
         <div className="min-h-screen flex flex-col justify-between pt-0 md:pt-8 p-8 dark:bg-zinc-950 bg-white text-gray-900 dark:text-zinc-200">
           <main className="max-w-[60ch] mx-auto w-full space-y-6">
+            <header>
+              <Link
+                href="/"
+                className="inline-block mt-12 text-2xl md:text-3xl font-semibold tracking-tight"
+                aria-label="Joon Kim — Home"
+              >
+                Joon Kim
+              </Link>
+            </header>
             {children}
           </main>
           <Footer />
