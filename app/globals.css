@@ -115,6 +115,34 @@ table {
   text-align: left;
 }
 
+.essay-illustration {
+  margin: 1.75rem 0 2rem;
+}
+
+.essay-illustration img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--color-gray-200);
+}
+
+.essay-illustration figcaption {
+  margin-top: 0.65rem;
+  color: var(--color-gray-500);
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
+@media (prefers-color-scheme: dark) {
+  .essay-illustration img {
+    border-color: var(--color-zinc-700);
+  }
+
+  .essay-illustration figcaption {
+    color: var(--color-zinc-400);
+  }
+}
+
 @media (max-width: 640px) {
   html {
     font-size: 19px;
