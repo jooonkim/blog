@@ -24,15 +24,17 @@ By Joon Kim
   </figcaption>
 </figure>
 
-*Disclaimer: The views in this post are informed by my work leading AI initiatives at Google and teaching at UC Berkeley Haas Executive Education. However, the views are my own and do not represent official guidance from Google or UC Berkeley. Examples are anonymized and simplified for illustration.*
+*Disclaimer: The views in this post are informed by my work leading AI initiatives at Google and teaching at the UC Berkeley Haas Executive Education program. However, the views are my own and do not represent official guidance from Google or UC Berkeley Haas. Examples are anonymized and simplified for illustration.*
 
 ## Why this matters
 
-AI agents can now read your email, query live data, and draft pitch decks in a single session. Most people start by using that capability for **speed**: drafting the same surface-level reply or meeting recap in two minutes instead of twenty. I love [Felix Rieseberg](https://felixrieseberg.com/how-to-be-more-ambitious-a-tutorial-for-humans-with-models/)’s framework for how doing the exact same narrow task faster is the smallest win available. In customer-facing work, the real shift is using an agent to raise your **altitude** (looking across the customer's whole business instead of just your product slice), widen your **range** (doing the data forensics, unit-economics modeling, and strategy writing you used to wait on other teams for), and deepen your **depth** (testing every claim against raw data).
+AI agents can now read your email, query live data, and draft pitch decks from end to end. The default use case of these new capabilities is **speed:** drafting the same meeting recap in two minutes instead of twenty. But it is also perhaps the most uninspired.
 
-The moment you work at that level, the question is no longer "can the model write a good email?" It is "can I trust what it tells my customer?"
+To borrow [Felix Rieseberg](https://felixrieseberg.com/how-to-be-more-ambitious-a-tutorial-for-humans-with-models/)’s framework, the most ambitious use of agents in customer-facing work is to raise your **altitude** (looking across the customer's whole business instead of just your product slice), widen your **range** (doing the data forensics, unit-economics modeling, and strategy writing you used to wait on other teams for), and deepen your **depth** (testing every claim against raw data).
 
-After building and teaching agentic workflows internally for our sales organizations and with clients, including a recent guest lecture at UC Berkeley Haas’s Executive Education Program, I have formalized my approach in one simple loop: **Know, Execute, Prove**.
+If this is you, this essay discusses the next logical question: moving beyond "can the model write a good email?" to "can I trust what it tells me, and can I trust how it advises my customer?"
+
+After building and teaching agentic workflows with clients, within our sales organization at Google, and most recently during a recent guest lecture at the UC Berkeley Haas Executive Education program, I would like to propose the **Know, Execute, Prove** framework.
 
 <Table
   data={{ headers: ["Pillar", "The question it answers", "What it looks like in practice"], rows: [["1. Know", "What do we know about this customer that is still true today?", "A curated, dated plain-text knowledge file per customer."], ["2. Execute", "How should the agent think and act for this kind of task?", "Reusable, written procedures (\"skills\") for repeatable workflows."], ["3. Prove", "Is our explanation actually true in the live data?", "A deterministic validation loop that tests every claim before a customer sees it."]] }}
