@@ -54,7 +54,25 @@
   margin-bottom: 1.5rem;
 }
 
-.agentic-post > h1 + p + p + p {
+.agentic-post .post-hero {
+  margin: 1.75rem 0 2rem;
+}
+
+.agentic-post .post-hero img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--post-border);
+}
+
+.agentic-post .post-hero figcaption {
+  margin-top: 0.65rem;
+  color: var(--post-muted);
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
+.agentic-post .post-hero + p {
   border-left: 3px solid var(--post-border);
   padding: 0.7rem 1rem;
   background: var(--post-panel);
