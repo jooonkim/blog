@@ -7,7 +7,9 @@ export const metadata = {
 
 # A Playbook for Capturing Enterprise Tacit Knowledge
 
-<br />
+**How to extract expert judgment, turn it into testable rules, and scale it across an organization.**
+
+By Joon Kim
 
 A structural limitation of current enterprise AI deployment is the assumption that out-of-the-box frontier models will autonomously solve complex workflows. State-of-the-art models are incredibly capable, but when dropped into an enterprise environment, they hit a strict performance ceiling. They default to generic best practices because their reasoning is constrained by static documentation. 
 
@@ -17,9 +19,7 @@ The true competitive advantage in enterprise AI isn't simply plugging into the l
 
 The following details the design decisions we made to adapt foundation models into these complex workflows, shifting them from generic chatbots into agents capable of independently strategizing against real constraints.
 
----
-
-### 1. Defining Scenario-Driven Evaluation Suites (Archetypes)
+## 1. Defining Scenario-Driven Evaluation Suites (Archetypes)
 
 **What We Did:**
 Development began by constructing a standardized evaluation suite. We defined detailed client profiles called "archetypes." An archetype is a rigorously defined state environment with specific constraints: current technical infrastructure, strict budget parameters, historical performance metrics, and compliance requirements.
@@ -42,7 +42,7 @@ Please perform the following operations:
 
 ---
 
-### 2. Extracting Conditional Logic (Delta Rules)
+## 2. Extracting Conditional Logic (Delta Rules)
 
 **What We Did:**
 Once the foundation model generated baseline outputs for the evaluation suite, domain experts were utilized to critique the outputs. The logic underlying these human critiques was extracted into a structured format called "Delta Rules."
@@ -80,7 +80,7 @@ Do not misclassify generic advice as a universal rule. A universal rule must be 
 
 ---
 
-### 3. Global Rule Propagation and Regression Testing
+## 3. Global Rule Propagation and Regression Testing
 
 **What We Did:**
 To enforce rule consistency, the system utilized an automated propagation pipeline. When a new Delta Rule was added to the central logic repository, a global propagation event was triggered. The system executed the updated prompt architecture against all archetypes in the evaluation suite, regenerating all baselines. This ensured that an insight derived from one edge-case scenario improved the agent's baseline reasoning across the entire corpus.
@@ -111,7 +111,7 @@ If no breakages are detected, output "PASS".
 
 ---
 
-### 4. Resolving Context Limits via Agent Swarms
+## 4. Resolving Context Limits via Agent Swarms
 
 **What We Did:**
 As the central repository of rules expanded, a single unified model became brittle, demonstrating degraded reasoning and increased hallucination rates. It could no longer balance the conflicting priorities of different workflow domains.
@@ -135,7 +135,7 @@ Force the Growth Persona to amend their plan until you determine the risk is neg
 
 ---
 
-### System Outcomes and Second-Order Effects
+## System Outcomes and Second-Order Effects
 
 By iterating through this calibration engine, the AI's output shifted from generic best practices to highly contextual strategic plans matching the heuristic judgment of top-performing staff.
 
