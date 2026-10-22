@@ -1,4 +1,5 @@
 import Table from './post-table';
+import InfoCards from './post-cards';
 
 export const metadata = {
   title: 'Know, Execute, Prove: A Practical Framework for Agentic Selling',
@@ -33,7 +34,7 @@ By Joon Kim
   </figcaption>
 </figure>
 
-*Disclaimer: The views in this post are my own and do not represent official guidance from my employer or any affiliated institution. Examples are anonymized and simplified for illustration.*
+*Disclaimer: The views in this post are informed by my work leading AI initiatives at Google and teaching at the UC Berkeley Haas Executive Education program. However, the views are my own and do not represent official guidance from Google or UC Berkeley Haas. Examples are anonymized and simplified for illustration.*
 
 ## Why this matters
 
@@ -43,7 +44,7 @@ AI agents can now read your email, query live data, and draft customer deliverab
 
 That ambition brings complexity. The agent has to combine information from several sources, choose appropriate methods, and explain recommendations that a customer may act on. We need a framework for deciding what it should know, how it should work, and what we need to verify.
 
-I use the **Know, Execute, Prove** framework across customer-facing roles, including enterprise sales, account management, solutions engineering, and advisory work:
+My view comes from leading AI initiatives at Google, building agent workflows with clients and sales teams, and giving a guest lecture at UC Berkeley Haas Executive Education. I use **Know, Execute, Prove** across customer-facing roles, including enterprise sales, account management, solutions engineering, and advisory work:
 
 - **Know:** Keep a small, dated Markdown file of what we know about each customer (`customers/<account>.md`).
 - **Execute:** Give the agent written, reusable procedures in Markdown with YAML frontmatter (`skills/<workflow>/SKILL.md`) for recurring work.
@@ -59,8 +60,8 @@ The practical response is to load information as the task requires it. This appr
 
 One practical way to manage progressive disclosure is with plain Markdown (`.md`) files. Where your agent supports it, short YAML frontmatter (`---`) can help it find the right file. Instead of pasting every rule, account history, and playbook into a single prompt, split the agent's workspace into four distinct layers:
 
-<Table
-  data={{"headers": ["Workspace Layer", "File Path & Format", "Loaded by Default (Startup Index)", "Loaded On Demand (Task Execution)"], "rows": [["1. Global Guardrails", "AGENTS.md or rules/guardrails.md (Markdown; YAML if supported)", "A short rules file pinned through your agent's supported setup", "Already in context on every turn"], ["2. Customer Files", "customers/<account>.md (Markdown + YAML)", "Only the file path and 1-sentence YAML description: (~25 tokens per account)", "Full 50–150 line Markdown file opened only for the active account"], ["3. Reusable Skills", "skills/<workflow>/SKILL.md (Markdown + YAML)", "Only the skill name: and 1-sentence YAML description:", "Full step-by-step Markdown procedure opened only when the workflow matches"], ["4. Deterministic Scripts", "skills/<workflow>/scripts/* (SQL / Python / Shell)", "Nothing loaded into prompt context", "Executed by a tool; only the relevant results return to context"]]}}
+<InfoCards
+  items={[{"title": "1. Global Guardrails", "fields": [{"label": "File", "value": "AGENTS.md or rules/guardrails.md (Markdown; YAML if supported)"}, {"label": "Load now", "value": "A short rules file pinned through your agent's supported setup"}, {"label": "Open later", "value": "Already in context on every turn"}]}, {"title": "2. Customer Files", "fields": [{"label": "File", "value": "customers/<account>.md (Markdown + YAML)"}, {"label": "Load now", "value": "Only the file path and 1-sentence YAML description: (~25 tokens per account)"}, {"label": "Open later", "value": "Full 50–150 line Markdown file opened only for the active account"}]}, {"title": "3. Reusable Skills", "fields": [{"label": "File", "value": "skills/<workflow>/SKILL.md (Markdown + YAML)"}, {"label": "Load now", "value": "Only the skill name and a one-sentence YAML description"}, {"label": "Open later", "value": "Full step-by-step Markdown procedure opened only when the workflow matches"}]}, {"title": "4. Deterministic Scripts", "fields": [{"label": "File", "value": "skills/<workflow>/scripts/* (SQL / Python / Shell)"}, {"label": "Load now", "value": "Nothing loaded into prompt context"}, {"label": "Open later", "value": "Executed by a tool; only the relevant results return to context"}]}]}
 />
 
 Adding more context often feels like diligence. If we give the agent every document and explain every exception, we hope it will make fewer mistakes. The difficulty is that we also give it more opportunities to use an outdated target, follow a superseded instruction, or mistake an example for a fact.
@@ -81,9 +82,21 @@ After a successful task, save the procedure and final deliverable where the agen
 
 I rank inputs in the following order when preparing customer advice, and treat anything below the top two as something to verify before citing:
 
-<Table
-  data={{"headers": ["Trust Rank", "Source Type", "How the Agent Should Use It"], "rows": [["1. Live Deterministic Query", "SQL query, reporting API call, or primary system record run in the current session", "Cite directly; save the query, parameters, and timestamp (#date:YYYY-MM-DD)."], ["2. Direct Customer Statement", "The customer's own dated words in an email or call (#direct)", "Cite with the date to support a statement about their goals or decisions; reconfirm if old."], ["3. Curated Account Memory", "Meeting notes and customers/<account>.md", "Use for business context; re-verify numerical metrics against a live source before citing."], ["4. Secondary Exports & Audits", "Pasted reports, screenshots, CSV exports, and third-party audits", "Treat as hypotheses to investigate; record their source and date (#status:unverified)."], ["5. Model Inference", "Unverified LLM reasoning or general domain priors", "Treat strictly as a hypothesis until a primary source supports it."]]}}
-/>
+1. **Live Deterministic Query.**
+   - **Source:** SQL query, reporting API call, or primary system record run in the current session
+   - **Use:** Cite directly; save the query, parameters, and timestamp (#date:YYYY-MM-DD).
+2. **Direct Customer Statement.**
+   - **Source:** The customer's own dated words in an email or call (#direct)
+   - **Use:** Cite with the date to support a statement about their goals or decisions; reconfirm if old.
+3. **Curated Account Memory.**
+   - **Source:** Meeting notes and `customers/<account>.md`
+   - **Use:** Use for business context; re-verify numerical metrics against a live source before citing.
+4. **Secondary Exports & Audits.**
+   - **Source:** Pasted reports, screenshots, CSV exports, and third-party audits
+   - **Use:** Treat as hypotheses to investigate; record their source and date (#status:unverified).
+5. **Model Inference.**
+   - **Source:** Unverified LLM reasoning or general domain priors
+   - **Use:** Treat strictly as a hypothesis until a primary source supports it.
 
 I pass the agent the primary thread, document, or raw query output when I have it. A human summary can erase the exact anomaly that makes a diagnosis possible. I also state the audience, the decision the work is meant to support, and the form of the deliverable.
 
@@ -191,8 +204,8 @@ In agents that support skill metadata, the YAML frontmatter at the top of `SKILL
 
 The first four skills I recommend building for a customer-facing team cover four recurring jobs:
 
-<Table
-  data={{"headers": ["Skill Folder", "Core Job", "Inputs Loaded", "Deterministic Check", "Staged Output"], "rows": [["skills/footprint-audit/", "Map the customer's full footprint across accounts, branches, and products", "customers/<account>.md + hierarchy SQL queries", "Cross-checks active vs. paused/ended workspaces and unlinked child accounts", "Footprint roster sheet + summary note"], ["skills/strategy-roadmap/", "Build an executive account strategy or joint business plan", "customers/<account>.md + unit economics inputs", "Verifies breakeven ROI / payback math in a script before drafting", "Strategy document + 30-60-90 milestone table"], ["skills/deliverable-drafter/", "Turn an approved plan into customer-facing materials", "Source strategy doc + raw query output (open the saved source file)", "Confirms 1:1 match between every table number and the queried source file", "Staged email draft + companion doc or sheet"], ["skills/usage-drop-diagnosis/", "Diagnose why a customer metric or workflow changed", "customers/<account>.md + customer thread + telemetry queries", "Tests candidate causes against live logs and sweeps all active units", "Evidence table + staged reply draft + updated <account>.md"]]}}
+<InfoCards
+  items={[{"title": "skills/footprint-audit/", "fields": [{"label": "Job", "value": "Map the customer's full footprint across accounts, branches, and products"}, {"label": "Sources", "value": "customers/<account>.md + hierarchy SQL queries"}, {"label": "Check", "value": "Cross-checks active vs. paused/ended workspaces and unlinked child accounts"}, {"label": "Draft", "value": "Footprint roster sheet + summary note"}]}, {"title": "skills/strategy-roadmap/", "fields": [{"label": "Job", "value": "Build an executive account strategy or joint business plan"}, {"label": "Sources", "value": "customers/<account>.md + unit economics inputs"}, {"label": "Check", "value": "Verifies breakeven ROI / payback math in a script before drafting"}, {"label": "Draft", "value": "Strategy document + 30-60-90 milestone table"}]}, {"title": "skills/deliverable-drafter/", "fields": [{"label": "Job", "value": "Turn an approved plan into customer-facing materials"}, {"label": "Sources", "value": "Source strategy doc + raw query output (open the saved source file)"}, {"label": "Check", "value": "Confirms 1:1 match between every table number and the queried source file"}, {"label": "Draft", "value": "Staged email draft + companion doc or sheet"}]}, {"title": "skills/usage-drop-diagnosis/", "fields": [{"label": "Job", "value": "Diagnose why a customer metric or workflow changed"}, {"label": "Sources", "value": "customers/<account>.md + customer thread + telemetry queries"}, {"label": "Check", "value": "Tests candidate causes against live logs and sweeps all active units"}, {"label": "Draft", "value": "Evidence table + staged reply draft + updated <account>.md"}]}]}
 />
 
 These `SKILL.md` files should specify *how* to find a number (the exact SQL query, API endpoint, or script to run), and use `<PLACEHOLDERS>` for account IDs, dates, and thresholds. They should **never** contain a real customer's live number as an inline example. A later draft may cite that sample number as a fact.
@@ -244,9 +257,26 @@ When a customer asks why a result changed, the fastest answer from a language mo
 
 Prove pairs model reasoning with deterministic tools (SQL queries, API calls, Python scripts, and primary logs) and gives each side the job it is built for:
 
-<Table
-  data={{"headers": ["Diagnostic Stage", "Deterministic Tool (SQL / API / Script)", "Model Judgment (LLM)"], "rows": [["1. Ground", "Reads customers/<account>.md and the verbatim email/ticket text.", "Identifies the business decision at stake and relevant stakeholders."], ["2. Hypothesize", "None.", "Lists candidate causes across product config, data pipeline, permissions, and demand."], ["3. Validate", "Runs queries for configuration history, active vs. paused status, event counts by action, and integration error logs.", "Selects which queries to run next and eliminates unsupported causes."], ["4. Compute", "Calculates all deltas, percentages, and ratios in SQL or Python.", "The model interprets the calculated result; it does not invent the figure."], ["5. Widen", "Loops the verification query across all active branches, workspaces, or campaigns.", "Prioritizes which affected units need immediate remediation vs. monitoring."], ["6. Synthesize", "Copies verified figures directly from query outputs and logs the exact queries in an appendix.", "Writes clear, partner-friendly prose and targeted questions for technical owners."], ["7. Update Memory", "Writes verified metrics with #date:YYYY-MM-DD and [source: ...] tags into customers/<account>.md.", "Identifies which findings are durable enough to replace stale entries."]]}}
-/>
+1. **Ground.**
+   - **Tool:** Reads `customers/<account>.md` and the verbatim email/ticket text.
+   - **Agent:** Identifies the business decision at stake and relevant stakeholders.
+2. **Hypothesize.**
+   - **Agent:** Lists candidate causes across product config, data pipeline, permissions, and demand.
+3. **Validate.**
+   - **Tool:** Runs queries for configuration history, active vs. paused status, event counts by action, and integration error logs.
+   - **Agent:** Selects which queries to run next and eliminates unsupported causes.
+4. **Compute.**
+   - **Tool:** Calculates all deltas, percentages, and ratios in SQL or Python.
+   - **Agent:** The model interprets the calculated result; it does not invent the figure.
+5. **Widen.**
+   - **Tool:** Loops the verification query across all active branches, workspaces, or campaigns.
+   - **Agent:** Prioritizes which affected units need immediate remediation vs. monitoring.
+6. **Synthesize.**
+   - **Tool:** Copies verified figures directly from query outputs and logs the exact queries in an appendix.
+   - **Agent:** Writes clear, partner-friendly prose and targeted questions for technical owners.
+7. **Update Memory.**
+   - **Tool:** Writes verified metrics with #date:YYYY-MM-DD and [source: ...] tags into `customers/<account>.md`.
+   - **Agent:** Identifies which findings are durable enough to replace stale entries.
 
 One quick reliability test is to run the diagnosis a second time in a fresh chat while holding the source data, reporting period, and metric definitions constant. The prose wording will vary, but every reported number, status, and calculation should match. If a number changes between runs, inspect the query, filters, source version, and calculation. Matching numbers still need review because both runs can repeat the same mistake.
 
@@ -257,7 +287,7 @@ Manually reconstructing every investigation would consume much of the time the a
 In the fictional account above, suppose monthly active users in a region fell from 120 to 90 (illustrative figures and records):
 
 <Table
-  data={{"headers": ["Proposed Claim", "Deterministic Evidence Attached", "Human Review Decision"], "rows": [["Active users fell 25.0% (from 120 to 90).", "Saved query queries/midwest_active_users.sql comparing Aug 1–31 vs. Sep 1–30 across the same 3 active branch IDs; script calculation (90 - 120) / 120 = -0.25.", "Confirmed. Spot-check the date filter and active-branch filter before accepting."], ["Poor user onboarding caused the decline.", "No cohort retention query or onboarding funnel log has been run.", "Unsupported. Cut this causal claim from the customer reply."], ["Check whether the Sep 10 SSO update blocked new seat provisioning.", "Provisioning error log shows 34 failed invite webhooks in Midwest branches starting #date:2026-09-10.", "Provisional root cause. Include in the reply as the primary technical check with the customer's IT lead."]]}}
+  data={{"headers": ["Claim", "Evidence", "Review"], "rows": [["Active users fell 25%, from 120 to 90.", "Saved query comparing August and September for the same three active branches; calculation: (90 - 120) / 120 = -0.25.", "Confirm counts and filters."], ["Poor onboarding caused the decline.", "No cohort or onboarding analysis has been run.", "Unsupported. Omit the cause."], ["Check whether the Sep 10 SSO update blocked provisioning.", "The illustrative error log shows 34 failed invites in Midwest branches from Sep 10.", "Provisional. Check with the customer's IT lead."]]}}
 />
 
 ### Checks to keep in a diagnostic procedure
@@ -284,9 +314,18 @@ Open the source behind the main recommendation, check one calculation, and inspe
 
 Not every task needs the same ceremony. Calibrate verification depth to the cost of a wrong answer:
 
-<Table
-  data={{"headers": ["Risk Tier", "Typical Examples", "Required Verification Gate"], "rows": [["Tier 1: Private Exploration", "Brainstorming hypotheses, learning a new industry, organizing rough notes", "Model inference is fine; label outputs #status:unverified and do not save to customers/<account>.md."], ["Tier 2: Internal Planning", "Account plans, internal prep notes, team readouts", "Every metric traces to a query with #date:YYYY-MM-DD; causes are labeled confirmed or hypothesis."], ["Tier 3: Customer-Facing Deliverables", "Client emails, strategy docs, QBR decks, diagnostic readouts", "Full Prove loop, verification table, open the saved source file check against raw query output, human review, and staged drafts only."], ["Tier 4: High-Stakes Commitments", "Pricing/budget changes, root-cause escalations, forecasts, or contractual terms", "Tier 3 plus a second human reviewer, conservative phrasing, and projections tied to an approved forecast source."]]}}
-/>
+1. **Private Exploration.**
+   - **Examples:** Brainstorming hypotheses, learning a new industry, organizing rough notes
+   - **Review:** Model inference is fine; label outputs #status:unverified and do not save to `customers/<account>.md`.
+2. **Internal Planning.**
+   - **Examples:** Account plans, internal prep notes, team readouts
+   - **Review:** Every metric traces to a query with #date:YYYY-MM-DD; causes are labeled confirmed or hypothesis.
+3. **Customer-Facing Deliverables.**
+   - **Examples:** Client emails, strategy docs, QBR decks, diagnostic readouts
+   - **Review:** Full Prove loop, verification table, open the saved source file check against raw query output, human review, and staged drafts only.
+4. **High-Stakes Commitments.**
+   - **Examples:** Pricing/budget changes, root-cause escalations, forecasts, or contractual terms
+   - **Review:** Tier 3 plus a second human reviewer, conservative phrasing, and projections tied to an approved forecast source.
 
 The cost of a plausible but wrong answer in customer work is concrete: a customer may reallocate budget, alter a rollout, or change a technical integration on the strength of your advice. My rule of thumb is simple: only include claims you would feel comfortable explaining to the customer's CFO with the underlying query and source record open on screen.
 
