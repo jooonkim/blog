@@ -14,6 +14,11 @@ const nextConfig: NextConfig = {
         source: '/soju',
         destination: '/chasing-soju.pdf',
         permanent: true
+      },
+      {
+        source: '/agentic-selling',
+        destination: '/agentic',
+        permanent: true
       }
     ];
 

@@ -1,5 +1,5 @@
-import '../agentic-selling/post.css';
-import Contents from '../agentic-selling/contents';
+import '../agentic/post.css';
+import Contents from '../agentic/contents';
 
 export default function TacitLayout({ children }: { children: React.ReactNode }) {
   return (
