@@ -2,9 +2,18 @@ import Table from './post-table';
 
 export const metadata = {
   title: 'Know, Execute, Prove: A Practical Framework for Agentic Selling',
-  description: 'How I use AI agents for customer work while keeping the facts under review',
-  alternates: {
-    canonical: '/agentic-selling',
+  description: 'A practical framework for customer-facing AI agents, with reusable files, procedures, and evidence checks.',
+  alternates: { canonical: '/agentic-selling' },
+  openGraph: {
+    title: 'Know, Execute, Prove: A Practical Framework for Agentic Selling',
+    description: 'A practical framework for customer-facing AI agents, with reusable files, procedures, and evidence checks.',
+    images: [{ url: 'https://www.joon.kim/durer-draughtsman-lute.jpg' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Know, Execute, Prove: A Practical Framework for Agentic Selling',
+    description: 'A practical framework for customer-facing AI agents, with reusable files, procedures, and evidence checks.',
+    images: ['https://www.joon.kim/durer-draughtsman-lute.jpg'],
   },
 };
 
@@ -24,224 +33,296 @@ By Joon Kim
   </figcaption>
 </figure>
 
-*Disclaimer: The views in this post are informed by my work leading AI initiatives at Google and teaching at the UC Berkeley Haas Executive Education program. However, the views are my own and do not represent official guidance from Google or UC Berkeley Haas. Examples are anonymized and simplified for illustration.*
+*Disclaimer: The views in this post are my own and do not represent official guidance from my employer or any affiliated institution. Examples are anonymized and simplified for illustration.*
 
 ## Why this matters
 
-AI agents can now read your email, query live data, and draft pitch decks from end to end. Speed is the most obvious use of these capabilities in customer-facing work. Producing the same meeting recap in two minutes instead of twenty certainly saves time, but we must ask ourselves what else becomes possible.
+AI agents can now read your email, query live data, and draft customer deliverables from end to end. Speed is the most obvious use of these capabilities in customer-facing work. Producing the same meeting recap in two minutes instead of twenty saves time, but we must ask ourselves what else becomes possible.
 
-[Felix Rieseberg](https://felixrieseberg.com/how-to-be-more-ambitious-a-tutorial-for-humans-with-models/) describes three other dimensions of ambition: altitude, range, and depth. In customer work, altitude means looking across the customer's business to understand the outcome they need. Range means drawing on disciplines such as data analysis, computer science, and domain expertise that we might previously have needed another team to provide. Depth means that you can take on questions and tasks that would transform a customer's business that you previously lacked the skills to answer.
+[Felix Rieseberg](https://felixrieseberg.com/how-to-be-more-ambitious-a-tutorial-for-humans-with-models/) describes three other dimensions of ambition: altitude, range, and depth. In customer work, altitude means looking across the customer's business to understand the outcome they actually need. Range means drawing on disciplines such as data analysis, computer science, and domain expertise that we might previously have needed another team to provide. Depth means taking on questions and tasks that can transform a customer's business that we previously lacked the instruments or time to answer.
 
-That ambition brings complexity. The agent has to combine information from several sources, choose appropriate methods, and explain recommendations that a customer may act on. We need a framework for deciding what it should know, how it should work, and what we need to verify. 
+That ambition brings complexity. The agent has to combine information from several sources, choose appropriate methods, and explain recommendations that a customer may act on. We need a framework for deciding what it should know, how it should work, and what we need to verify.
 
-After building and teaching agent workflows with clients and within our sales organization at Google, including a guest lecture at UC Berkeley Haas Executive Education, I propose a **Know, Execute, Prove** framework for customer-facing work:
+I use the **Know, Execute, Prove** framework across customer-facing roles, including enterprise sales, account management, solutions engineering, and advisory work:
 
-* **Know:** Keep a small, dated record of what we know about the customer.
-* **Execute:** Give the agent written procedures for recurring work.
-* **Prove:** Check consequential claims against current, inspectable evidence before a customer sees them.
+- **Know:** Keep a small, dated Markdown file of what we know about each customer (`customers/<account>.md`).
+- **Execute:** Give the agent written, reusable procedures in Markdown with YAML frontmatter (`skills/<workflow>/SKILL.md`) for recurring work.
+- **Prove:** Check consequential claims against current, inspectable evidence from deterministic queries or primary records before a customer sees them.
 
 The three parts depend on one another. A procedure needs customer context; a diagnosis needs live evidence; verified findings should update the customer record.
 
 ## Give the agent less to read, and better material
 
-Models can accept long inputs, but a long context window does not guarantee that a buried fact will shape the answer. I have found that stale information is especially troublesome. A May revenue target beside a September target can look like two equally valid instructions. An old report can sound current when its date is missing.
+Models can accept long inputs, but a long context window does not guarantee that a buried fact will shape the answer. Stale information is especially troublesome. A May revenue target beside a September target can look like two equally valid instructions. An old report can sound current when its date is missing.
 
-The practical response is to load information as the task requires it. At the start of a customer question, the agent needs a short description of the customer and a way to find the relevant file. It can open the full file when needed. A procedure can similarly load when the task calls for it. Query results should be small enough for the agent, and the seller, to inspect.
+The practical response is to load information as the task requires it. This approach is often called **progressive disclosure**. The research on ["Lost in the Middle"](https://arxiv.org/abs/2307.03172), Chroma's work on ["Context Rot"](https://research.trychroma.com/context-rot), and Anthropic's guide to ["Effective Context Engineering for AI Agents"](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents) help explain why it works. I treat context as an attention budget to curate: include current material that helps answer the question and leave the rest on disk for retrieval.
 
-This approach is often called progressive disclosure. The research on “lost in the middle” and context rot helps explain why it can work, though performance varies by model and task. I treat context as something to curate: include current material that helps answer the question and leave the rest available for retrieval.
+One practical way to manage progressive disclosure is with plain Markdown (`.md`) files. Where your agent supports it, short YAML frontmatter (`---`) can help it find the right file. Instead of pasting every rule, account history, and playbook into a single prompt, split the agent's workspace into four distinct layers:
+
+<Table
+  data={{"headers": ["Workspace Layer", "File Path & Format", "Loaded by Default (Startup Index)", "Loaded On Demand (Task Execution)"], "rows": [["1. Global Guardrails", "AGENTS.md or rules/guardrails.md (Markdown; YAML if supported)", "A short rules file pinned through your agent's supported setup", "Already in context on every turn"], ["2. Customer Files", "customers/<account>.md (Markdown + YAML)", "Only the file path and 1-sentence YAML description: (~25 tokens per account)", "Full 50–150 line Markdown file opened only for the active account"], ["3. Reusable Skills", "skills/<workflow>/SKILL.md (Markdown + YAML)", "Only the skill name: and 1-sentence YAML description:", "Full step-by-step Markdown procedure opened only when the workflow matches"], ["4. Deterministic Scripts", "skills/<workflow>/scripts/* (SQL / Python / Shell)", "Nothing loaded into prompt context", "Executed by a tool; only the relevant results return to context"]]}}
+/>
 
 Adding more context often feels like diligence. If we give the agent every document and explain every exception, we hope it will make fewer mistakes. The difficulty is that we also give it more opportunities to use an outdated target, follow a superseded instruction, or mistake an example for a fact.
 
 ### What to load for the next task
 
-Suppose you are preparing a renewal review. A familiar prompt might be: “Read these twelve documents, revisit the conversation where we made last quarter's deck, and follow that workflow with all the goals we discussed.” Before running it, decide what the agent needs now:
+Suppose you are preparing a renewal review. A familiar prompt might be: *"Read these twelve documents, revisit the conversation where we made last quarter's deck, and follow that workflow with all the goals we discussed."* Before running it, decide what the agent needs now:
 
-* Load the current customer file, the renewal question, and the procedure for preparing the review.
-* Keep the contract, usage reports, and previous deck available to open when a specific step needs them.
-* Move superseded targets and abandoned draft instructions out of the active context. Preserve their sources as history, especially if you need to explain what changed.
+- Load the current customer Markdown file (`customers/<account>.md`), the renewal question, and the skill for preparing the review (`skills/renewal-review/SKILL.md`).
+- Keep the contract, usage reports, and previous deck available on disk or via tools to open when a specific step needs them.
+- Move superseded targets and abandoned draft instructions out of the active context. Preserve their sources as dated links in an archive or ledger if you need to explain what changed.
 
-The resulting prompt can be: “Prepare a renewal review using the current customer file and our review procedure. Confirm the renewal date in the contract and pull usage for the agreed reporting period. Use last quarter's deck as a layout reference. Flag conflicting goals before making a recommendation.”
+The resulting prompt can be: *"Prepare a renewal review using `customers/acme.md` and `skills/renewal-review/SKILL.md`. Confirm the renewal date in the contract and pull usage for the agreed reporting period. Use last quarter's deck as a layout reference. Flag conflicting goals before making a recommendation."*
 
-After a successful task, save the procedure and final deliverable where the agent can retrieve them. Reconstructing the workflow from a long conversation forces the next run to sift through the failed attempts as well.
+After a successful task, save the procedure and final deliverable where the agent can retrieve them. Reconstructing the workflow from a long conversation forces the next run to sift through failed attempts as well.
 
 ### Decide what to trust
 
-I use the following order when preparing customer advice:
+I rank inputs in the following order when preparing customer advice, and treat anything below the top two as something to verify before citing:
 
-1. A live query or primary system record from the current session can support a current metric or status. Save the query, source, and date.
-2. The customer's own dated words can support a statement about their goals or decisions. Reconfirm anything that may have changed.
-3. Meeting notes and the customer file provide context. Check numerical claims against a current source before citing them.
-4. Pasted reports, screenshots, exports, and third-party audits suggest questions to investigate. Record their source and date.
-5. Model inference is a hypothesis until another source supports it.
+<Table
+  data={{"headers": ["Trust Rank", "Source Type", "How the Agent Should Use It"], "rows": [["1. Live Deterministic Query", "SQL query, reporting API call, or primary system record run in the current session", "Cite directly; save the query, parameters, and timestamp (#date:YYYY-MM-DD)."], ["2. Direct Customer Statement", "The customer's own dated words in an email or call (#direct)", "Cite with the date to support a statement about their goals or decisions; reconfirm if old."], ["3. Curated Account Memory", "Meeting notes and customers/<account>.md", "Use for business context; re-verify numerical metrics against a live source before citing."], ["4. Secondary Exports & Audits", "Pasted reports, screenshots, CSV exports, and third-party audits", "Treat as hypotheses to investigate; record their source and date (#status:unverified)."], ["5. Model Inference", "Unverified LLM reasoning or general domain priors", "Treat strictly as a hypothesis until a primary source supports it."]]}}
+/>
 
-I pass the agent the source thread, document, or query output when I have it. A paraphrase can erase the odd detail that makes a diagnosis possible. I also state the audience, the decision the work is meant to support, and the form of the deliverable. If a fact is uncertain, I mark it as such.
+I pass the agent the primary thread, document, or raw query output when I have it. A human summary can erase the exact anomaly that makes a diagnosis possible. I also state the audience, the decision the work is meant to support, and the form of the deliverable.
 
 ### Keep the setup simple
 
-The agent's working setup consists of its customer files, procedures, tools, and rules for review. I keep instructions short enough to inspect. For each instruction, I ask whether it supplies knowledge the model lacks or protects against a mistake with real consequences.
+The agent's harness consists of its global rules, customer files, skills, and connected tools (operating inside your organization's approved enterprise environment and access controls). I keep global instructions short enough to inspect at a glance. For each global rule, I ask whether it supplies knowledge the model lacks or protects against a mistake with real consequences.
 
-Over-engineering becomes visible when instructions conflict, several files repeat slightly different versions of the same rule, or a procedure hardcodes details from one customer. To test a suspected redundant instruction, save a copy, remove it, and rerun several familiar tasks, including a case where that rule should matter. One successful output tells you very little. Keep required review rules even when the test cases do not trigger them.
+Keep one short global rules file pinned to every turn. The frontmatter below is illustrative; use only metadata fields your agent actually recognizes. A plain `AGENTS.md` can contain the rules without frontmatter:
 
-This is also why I keep customer numbers out of reusable procedures. A procedure can tell the agent how to find a renewal date, a contract value, or an acquisition target. The customer's actual values belong in a dated file or a current system result.
+```markdown
+---
+description: Global verification and staging guardrails for customer-facing work
+trigger: always_on
+---
 
-Voice dictation can be a useful way to get your thinking down. Before running a long dictated prompt, have the agent organize it. Try this:
+- Stage all outbound communications: create email drafts or review docs; never send messages or share files externally without explicit human approval.
+- Trace every number and causal claim to an appropriate current query or primary record. Label each proposed cause as confirmed or hypothesis.
+- Never rely on a top-level "enabled" or "active" flag alone; verify actual recent delivery or activity over a relevant period and label inactive items clearly.
+- Re-read underlying source files and raw query outputs before populating any downstream deck, document, or table.
+- Treat pasted reports, screenshots, exports, and numbers inside skills as unverified until re-queried.
+- When context is missing or ambiguous, ask clarifying questions instead of guessing.
+- When updating customer files, tag every fact with its date (#date:YYYY-MM-DD) and overwrite superseded entries instead of appending.
+```
 
-> Organize this rough request into the decision I need to make, the relevant sources, the constraints, and the deliverable. Identify conflicting instructions and questions I need to answer. Suggest what to load now and what to retrieve only if needed. Preserve my intent and show the revised request before executing it.
+Over-engineering becomes visible when instructions conflict, several files repeat slightly different versions of the same rule (for example, duplicating rules across both `AGENTS.md` and `rules/guardrails.md`), or a procedure hardcodes details from one customer. To test a suspected redundant instruction, save a backup, remove the line, and rerun several familiar tasks, including a case where that rule should matter. Keep safety and verification rules even when routine test cases do not trigger them.
 
-For a familiar task, compare the original and revised prompts using the same source data. Judge the outputs by factual accuracy, missed requirements, and the amount of correction you had to do. A shorter prompt is useful only if it still asks for the work you need.
+Voice dictation can be a useful way to get rough thinking down, but dictated prompts often mix goals, constraints, and tangents. Before running a long dictated prompt, have the agent organize it:
 
-To follow along, pick one customer and a real question you want to investigate. Use the same customer through the checkpoints below. Your harness is the setup around the model: the files it can retrieve, the tools it can use, and the instructions it follows. An agent with access to a project folder is enough to begin. If a source is unavailable, record what is missing and who can supply it.
+> Organize this rough request into the decision I need to make, the relevant sources, the constraints, and the deliverable. Identify conflicting instructions and questions I need to answer. Suggest which Markdown files or skills to load now and what to retrieve only if needed. Preserve my intent and show the revised request before executing it.
+
+To follow along, pick one customer and a real question you want to investigate. Use the same customer through the checkpoints below.
 
 ## Know: maintain a customer file
 
-For each customer, I keep a plain-text file that I can read and correct. It is a working record, not a transcript archive. A short description at the top helps the agent decide when to open it. Roughly 50 to 150 lines is a useful starting size, though the right length depends on the account.
+For each customer, I keep a plain-text Markdown file (`customers/<account>.md`) that I can read and edit directly in any text editor. It is a working record, not a transcript archive. Roughly 50 to 150 lines is a useful size.
 
-I organize the file around the business question behind the immediate request. A customer may ask about a product setting while trying to fill regional branch capacity, improve the margin on completed jobs, or win more repeat work. The agent needs enough of that context to make a useful recommendation.
+The file starts with a YAML frontmatter block (`---`). Its one-sentence `description:` lets the agent's file index or retrieval hook decide when to open the file without reading all of your customer files into memory on every turn.
 
-I start with a one-sentence description of the business model and current initiatives. The file then has four sections:
+I organize the Markdown body around the business question behind the immediate request. A customer may ask about a product setting while trying to fill regional branch capacity, improve the margin on completed jobs, or win more repeat business. The file has four sections, with inline provenance tags (`#direct`, `#date:YYYY-MM-DD`, `[source: ...]`) on every material fact. The following account is fictional; its figures, records, and dates are illustrative:
 
-1. The customer's customers: who buys, which partners or branches shape the sale, and where the business makes margin.
-2. Stakeholders and unit economics: roles, priorities, success measures, margin, lifetime value, and the cost of acquiring or serving a customer.
-3. Verified footprint: products in use, relevant systems, key metrics, data flows, and known measurement gaps.
-4. Dated strategy ledger: decisions, links to deliverables, open questions, and the source and date of each material fact.
+```markdown
+---
+description: Multi-region B2B software account focused on Q4 seat expansion and reducing onboarding drop-off across 12 regional branches.
+last_updated: 2026-10-01
+---
 
-When a decision changes, I replace the old entry and retain a link to the earlier source if it matters. That gives the agent one current version to use. I label unresolved questions so they cannot quietly become facts in a later draft.
+## 1. The customer's customers
+- End buyer: Mid-market operations teams purchasing workflow automation to reduce manual ticket routing.
+- Channel and branch dynamics: 12 regional branches sell and implement locally; corporate HQ controls pricing tiers and renewal terms.
+- Margin driver: Annual enterprise subscriptions (78% gross margin) and multi-year implementation renewals.
 
-A file like this gives the agent a starting point for a renewal discussion, a performance question, or a strategy proposal. It still has to check what changed since the file was last updated.
+## 2. Stakeholders and unit economics
+- VP of Operations (Executive Sponsor): Prioritizes branch adoption rate and time-to-first-workflow [source: Q3 QBR call, #direct, #date:2026-09-14].
+- RevOps Lead (Technical Owner): Owns CRM-to-product telemetry sync and seat provisioning.
+- Unit economics: $18,000 average annual contract value; target payback under 9 months; renewal threshold requires >=70% active seat utilization.
+
+## 3. Verified footprint
+- Active deployment: 420 provisioned seats across 12 branches; 310 monthly active seats as of #date:2026-09-28 [source: queries/active_seats_by_branch.sql].
+- Inactive legacy workspaces: 2 regional sandbox workspaces remain marked ENABLED in billing but have 0 active users over the last 14 days (PAUSED).
+- Data pipeline: Daily webhook sync from customer CRM to product analytics; known 48-hour attribution lag on offline contract upgrades.
+
+## 4. Dated strategy ledger
+- 2026-09-14 (#direct): Agreed to pilot automated onboarding playbooks in 3 branches before expanding contract-wide [source: Q4 Pilot Proposal Doc].
+- Open question (#status:unconfirmed): Why did Midwest branch active seats fall 25% in September? Pending cohort export from RevOps Lead.
+```
+
+When a decision changes, I overwrite the old line and retain a link to the earlier source if history matters. That gives the agent one current version to use. I explicitly tag unresolved questions with `#status:unconfirmed` so they cannot quietly become facts in a later draft.
 
 ### Checkpoint 1: make the customer file retrievable
 
-Give your agent a recent customer email and the notes or records you trust. Use this prompt:
+Give your agent a recent customer email thread and the notes or records you trust. Use this prompt:
 
-> Draft a short customer file using these sources. Organize it into the customer's customers, stakeholders and unit economics, verified footprint, and dated strategy ledger. Add a source and date to each material fact. Mark missing information as unknown and show conflicting facts for my review. Keep proposed explanations separate from confirmed facts. Show me the file before saving it.
+> Draft a customer Markdown file (`customers/<account>.md`) using these sources. Start with a YAML frontmatter block containing a one-sentence `description:` and `last_updated: YYYY-MM-DD`. Organize the Markdown body into four H2 sections: `1. The customer's customers`, `2. Stakeholders and unit economics`, `3. Verified footprint`, and `4. Dated strategy ledger`. Attach a `[source: ...]` and `#date:YYYY-MM-DD` tag (plus `#direct` for direct customer statements) to each material fact. Mark missing information as `#status:unknown` and surface conflicting facts for my review. Show me the Markdown file before saving it.
 
-Correct the file, then save it somewhere the agent can retrieve in a new session. Add its location and a one-sentence description to your project's instructions or file index. Start a fresh chat and ask the agent for the customer's current goal and most recent agreed decision, with sources. You should be able to open those sources and confirm both answers. If the agent cannot find the file, fix retrieval before adding more context.
+Correct the file, then save it in your workspace's `customers/` folder and add its path and one-sentence description to your index if your tool does not index YAML frontmatter automatically. Start a fresh chat and ask the agent for the customer's current goal and most recent agreed decision, with sources. You should be able to open those sources and confirm both answers.
 
 ### What to carry into a fresh chat
 
-Start a new chat when the task changes or the conversation has accumulated enough dead ends that it is hard to follow. For work that spans sessions, save a short handoff containing the current goal, verified findings with source links, unresolved questions, and the next step. The new session should open the relevant customer file and procedure itself.
+Start a new chat when the task changes or the conversation has accumulated enough dead ends that it is hard to follow. Copying an entire transcript into a new session also copies its stale assumptions. Instead, have the agent write a compact `handoff.md` file (or paste a short YAML/Markdown handoff block) and let the new session open the canonical customer file and skill fresh:
 
-An automatic handoff can help with long tasks, provided it carries that short record forward. Copying the entire conversation also copies its stale assumptions. A throttling warning may reflect a usage limit, so treat it separately from the question of whether the current context is still useful.
+```markdown
+---
+task: Q4 renewal and Midwest branch usage diagnosis
+customer_file: customers/acme.md
+skill: skills/usage-drop-diagnosis/SKILL.md
+date: 2026-10-02
+---
+
+## Verified findings
+- Provisioned seats: 420 across 12 branches; active seats fell from 120 to 90 (-25.0%) in the Midwest region between August and September [source: queries/midwest_active_users.sql, #date:2026-10-02].
+- Billing and contract entitlements are unchanged [source: contract_ledger_v4, #date:2026-10-02].
+
+## Open questions (#status:unconfirmed)
+- Did the September 10 SSO identity-provider migration break automated seat provisioning in the 3 Midwest branches?
+
+## Next step
+- Run `scripts/check_sso_provisioning_logs.sql` for the 3 Midwest branch IDs before drafting the customer reply.
+```
 
 ## Execute: write procedures for work you repeat
 
-A skill is a written procedure that the agent can load for a particular task. I use skills for work I expect to repeat or work where an omission would be costly. Each one tells the agent what to check before it proposes an answer and what to prepare for my review at the end.
+A **skill** is a written procedure stored as a `SKILL.md` file inside its own folder (`skills/<workflow-name>/SKILL.md`), optionally paired with deterministic query templates or helper scripts (`skills/<workflow-name>/scripts/`) and reference templates (`skills/<workflow-name>/references/`).
 
-The first skills I would write for a sales team cover four jobs:
+In agents that support skill metadata, the YAML frontmatter at the top of `SKILL.md` helps the agent decide *when* to load the full file. A sharp `description:` states both what the skill does and the exact trigger conditions ("Use when... Don't use for...").
 
-* **Find the customer's footprint.** Identify products, teams, locations, systems, and metrics before making a claim about the whole relationship.
-* **Build a strategy.** Read the customer file, check the unit economics, and put the proposed roadmap in a document.
-* **Prepare deliverables.** Turn the plan into a draft email and any supporting document or working sheet. Leave external sharing to the seller.
-* **Diagnose a change.** List possible causes, query the relevant systems, check whether the pattern appears elsewhere, and draft a response with sources.
+The first four skills I recommend building for a customer-facing team cover four recurring jobs:
 
-These procedures should say how to find a number, including the query or tool to use. They should never contain a customer's live number as an example. That is an easy way to make a later draft sound precise and be wrong.
+<Table
+  data={{"headers": ["Skill Folder", "Core Job", "Inputs Loaded", "Deterministic Check", "Staged Output"], "rows": [["skills/footprint-audit/", "Map the customer's full footprint across accounts, branches, and products", "customers/<account>.md + hierarchy SQL queries", "Cross-checks active vs. paused/ended workspaces and unlinked child accounts", "Footprint roster sheet + summary note"], ["skills/strategy-roadmap/", "Build an executive account strategy or joint business plan", "customers/<account>.md + unit economics inputs", "Verifies breakeven ROI / payback math in a script before drafting", "Strategy document + 30-60-90 milestone table"], ["skills/deliverable-drafter/", "Turn an approved plan into customer-facing materials", "Source strategy doc + raw query output (open the saved source file)", "Confirms 1:1 match between every table number and the queried source file", "Staged email draft + companion doc or sheet"], ["skills/usage-drop-diagnosis/", "Diagnose why a customer metric or workflow changed", "customers/<account>.md + customer thread + telemetry queries", "Tests candidate causes against live logs and sweeps all active units", "Evidence table + staged reply draft + updated <account>.md"]]}}
+/>
 
-Most sales organizations also have a methodology they want reflected in customer work. I put a few checkable actions in the drafting procedure: identify the stakeholders, connect the recommendation to the customer's stated goal, trace each number to its source, and propose a next step. The full training deck remains available when someone actually needs it.
+These `SKILL.md` files should specify *how* to find a number (the exact SQL query, API endpoint, or script to run), and use `<PLACEHOLDERS>` for account IDs, dates, and thresholds. They should **never** contain a real customer's live number as an inline example. A later draft may cite that sample number as a fact.
+
+Here is a concrete, minimal `skills/usage-drop-diagnosis/SKILL.md` template:
+
+```markdown
+---
+name: usage-drop-diagnosis
+description: Diagnoses a change or drop in customer product usage, conversion volume, or pipeline health. Use when a customer or teammate asks why a metric changed. Don't use for initial account footprint discovery or renewal pricing proposals.
+---
+
+## 1. Context to load first
+- Open `customers/<account>.md` and read the verified footprint, data pipeline notes, and dated strategy ledger.
+- Read the customer's incoming email thread or ticket verbatim.
+
+## 2. Hypothesis generation and deterministic verification
+- List plausible causes before proposing an explanation (e.g., configuration override, data-sync or webhook failure, permission/SSO change, seasonal schedule, or upstream demand shift).
+- Run `scripts/compare_period_metrics.sql` for `<ACCOUNT_ID>` across `<CURRENT_PERIOD>` and `<PRIOR_PERIOD>`.
+- Verify which workspaces or units are actively serving (`serving_status = 'ACTIVE'` with delivery in the last 14 days) versus `(PAUSED)` or `(ENDED)`.
+- Compute all percentages, ratios, and deltas inside the SQL query or Python script rather than in the drafted prose.
+- Sweep all other active workspaces or branches in `<ACCOUNT_ID>` to check whether the pattern is isolated or account-wide.
+
+## 3. Methodology checklist (apply, don't recite)
+- Check stakeholders in `customers/<account>.md` so the tone and level of detail match the reader.
+- Connect the recommendation to the customer's stated business goal and unit economics.
+- Trace every number and causal statement to a current query or primary source you can inspect.
+- Separate confirmed findings from open questions requiring customer or partner input.
+
+## 4. Deliverable and human-in-the-loop gate
+- Output a 3-column verification table (`Proposed claim`, `Query / evidence source`, `Review status`) before the draft.
+- Stage a concise reply draft (3–4 plain-English bullets) and place detailed tables and step-by-step fixes in a companion document.
+- Propose dated `#date:YYYY-MM-DD` updates to `customers/<account>.md` for review. Never send emails or share documents externally.
+```
+
+Notice Section 3 of that skill. Most organizations have a sales or advisory methodology they want reflected in customer work. Pasting a 60-slide methodology deck into your global rules wastes attention on every turn. Compressing it into four or five checkable lines inside the drafting skill keeps the output aligned with how your team coaches without bloating the context window.
 
 ### Checkpoint 2: save one procedure you can reuse
 
-Choose a workflow connected to your customer question, such as preparing a renewal review or investigating a change in product usage. Ask your agent:
+Choose a workflow connected to your customer question, such as preparing a renewal review or diagnosing a change in product usage. Ask your agent:
 
-> Draft a reusable procedure for this workflow. State when to use it, which customer context to load, what to check before making a recommendation, and what deliverable to prepare. Use only the tools available in this setup. If a needed source is inaccessible, specify what to ask me for. Include how to check the claims and calculations. Use placeholders for customer details. End with a draft for my review.
+> Draft a reusable `SKILL.md` file for this workflow. Start with a YAML frontmatter block containing `name:` (kebab-case) and a specific `description:` stating when to load the skill and what it is not for. In the Markdown body, specify: (1) which `customers/<account>.md` sections and primary sources to open first, (2) what deterministic checks or queries to run before making a recommendation, (3) how to verify calculations and active statuses, and (4) what staged deliverable to prepare for human review. Use `<PLACEHOLDERS>` for all customer-specific values. Show me the complete `SKILL.md` file.
 
-Review the steps against how you would do the work yourself. Save the result as a skill or reusable instruction file in the location your agent supports, with a short description of when to load it. In a new session, give the agent a task that should use the procedure. Ask it to identify which procedure it loaded and any checks it could not complete. Revise steps that were skipped or could not be followed.
+Review the steps against how you do the work yourself. Save the file under `skills/<workflow-name>/SKILL.md`. In a fresh chat, give the agent a task that should trigger the skill, and ask it to report which `SKILL.md` it loaded and which checks it completed or could not complete. Revise any step that was skipped or ambiguous.
 
 ## Prove: investigate before drafting an explanation
 
-When a customer asks why a result changed, I want the agent to produce possible causes before it settles on one. A drop in sales might reflect demand, a product change, an implementation problem, a measurement gap, or a new constraint on the customer's team. The agent checks the systems and source material that bear on each explanation, drops those the evidence does not support, and looks for the same pattern elsewhere. In Ads, that can mean checking campaign goals, bid targets, conversion signals, and tracking.
+When a customer asks why a result changed, the fastest answer from a language model is a fluent guess. A drop in adoption or output might reflect customer demand, a product configuration change, a broken integration, a reporting gap, or a staffing constraint on the customer's team. Asking a language model *"are you sure?"* lets the model grade its own homework.
 
-The sequence I use is:
+Prove pairs model reasoning with deterministic tools (SQL queries, API calls, Python scripts, and primary logs) and gives each side the job it is built for:
 
-1. Read the customer question, the thread, and the current customer file.
-2. List plausible causes and the data needed to test each one.
-3. Check the relevant systems and source documents. Save the source behind every material claim.
-4. Look for the same issue across other products, teams, regions, or accounts where relevant.
-5. Draft a short reply and a supporting fix plan. Leave both staged for review.
-6. Prepare questions for any partner or customer team that owns a missing piece of the data.
-7. Put confirmed, dated findings back into the customer file.
+<Table
+  data={{"headers": ["Diagnostic Stage", "Deterministic Tool (SQL / API / Script)", "Model Judgment (LLM)"], "rows": [["1. Ground", "Reads customers/<account>.md and the verbatim email/ticket text.", "Identifies the business decision at stake and relevant stakeholders."], ["2. Hypothesize", "None.", "Lists candidate causes across product config, data pipeline, permissions, and demand."], ["3. Validate", "Runs queries for configuration history, active vs. paused status, event counts by action, and integration error logs.", "Selects which queries to run next and eliminates unsupported causes."], ["4. Compute", "Calculates all deltas, percentages, and ratios in SQL or Python.", "The model interprets the calculated result; it does not invent the figure."], ["5. Widen", "Loops the verification query across all active branches, workspaces, or campaigns.", "Prioritizes which affected units need immediate remediation vs. monitoring."], ["6. Synthesize", "Copies verified figures directly from query outputs and logs the exact queries in an appendix.", "Writes clear, partner-friendly prose and targeted questions for technical owners."], ["7. Update Memory", "Writes verified metrics with #date:YYYY-MM-DD and [source: ...] tags into customers/<account>.md.", "Identifies which findings are durable enough to replace stale entries."]]}}
+/>
 
-The model chooses which questions to ask and helps interpret the results. Queries and scripts calculate metrics; original records establish what someone said or decided. A query can verify a setting or a reported number. Causal explanations may still need more evidence, so I label those conclusions accordingly.
-
-One quick check is to run the diagnosis again in a fresh chat. Hold the source data, reporting period, and metric definitions constant. The wording may change, but reported numbers and calculations should agree. If they differ, inspect the queries, filters, and source versions. Matching answers still need verification: two runs can repeat the same mistake.
+One quick reliability test is to run the diagnosis a second time in a fresh chat while holding the source data, reporting period, and metric definitions constant. The prose wording will vary, but every reported number, status, and calculation should match. If a number changes between runs, inspect the query, filters, source version, and calculation. Matching numbers still need review because both runs can repeat the same mistake.
 
 ### Make the review manageable
 
-Manually reconstructing every investigation would consume much of the time the agent saves. The procedure should prepare the evidence for review as it works: save queries, calculate figures in a tool, and flag claims with missing or conflicting support. The reviewer can then focus on the recommendation and the facts that could change the customer's decision. Asking the model whether it is confident adds no independent evidence.
+Manually reconstructing every investigation would consume much of the time the agent saves. Have your diagnostic skill output a compact evidence table before the draft reply so you can verify the load-bearing claims in two minutes.
 
-For example, suppose a customer's active users fell from 120 to 90. These numbers are illustrative. A useful evidence record would look like this:
+In the fictional account above, suppose monthly active users in a region fell from 120 to 90 (illustrative figures and records):
 
 <Table
-  data={{"headers": ["Proposed claim", "Evidence to attach", "Review decision"], "rows": [["Active users fell 25%.", "Saved usage query with both reporting periods, the same account set and definition of active, and the calculation (90 - 120) / 120.", "Check the source counts and filters before accepting the figure."], ["Poor onboarding caused the decline.", "No onboarding or cohort analysis has been completed.", "Unsupported. Leave this causal claim out of the reply."], ["Investigate which users stopped using the product before proposing a renewal plan.", "The verified usage change and the customer's confirmed renewal context.", "A proposed next step for the seller to assess."]]}}
+  data={{"headers": ["Proposed Claim", "Deterministic Evidence Attached", "Human Review Decision"], "rows": [["Active users fell 25.0% (from 120 to 90).", "Saved query queries/midwest_active_users.sql comparing Aug 1–31 vs. Sep 1–30 across the same 3 active branch IDs; script calculation (90 - 120) / 120 = -0.25.", "Confirmed. Spot-check the date filter and active-branch filter before accepting."], ["Poor user onboarding caused the decline.", "No cohort retention query or onboarding funnel log has been run.", "Unsupported. Cut this causal claim from the customer reply."], ["Check whether the Sep 10 SSO update blocked new seat provisioning.", "Provisioning error log shows 34 failed invite webhooks in Midwest branches starting #date:2026-09-10.", "Provisional root cause. Include in the reply as the primary technical check with the customer's IT lead."]]}}
 />
 
-This gives the seller something concrete to inspect on a call. The source checks can be repeated by tools; deciding whether the evidence justifies the recommendation still requires judgment.
+### Checks to keep in a diagnostic procedure
+
+Regardless of industry or product, seven checks help catch common diagnostic failures in customer-facing agent workflows:
+
+- **Separate active records from legacy or paused shells:** Never trust a top-level `status = ENABLED` flag alone. Check actual delivery or usage over a relevant recent period and explicitly label dormant items as `(PAUSED)` or `(ENDED)` so you never recommend optimizing an inactive setup.
+- **Distinguish optimization signals from total logged events:** Many systems record dozens of event types while using only a subset to drive automated workflows, routing, or billing. Verify which events are configured as primary triggers.
+- **Check local overrides before trusting account-wide defaults:** Workspace-, branch-, or campaign-level settings frequently override parent account defaults without surfacing a warning.
+- **Compare single-unit issues against account-wide patterns:** Before blaming a local configuration edit, check whether the same drop occurred across all workspaces or branches. A shared drop may suggest a wider data or integration change.
+- **Inspect integration payloads and zero-value records:** External CRM and partner pipeline changes rarely appear in product audit logs. Check upload diagnostics, error rates, and whether events are arriving with `0` or `null` values before launching value-based automation.
+- **Account for ingestion and attribution lag:** When evaluating changes made within the last few days, check the system's reporting latency and whether events are attributed by interaction date or completion date.
+- **Re-read raw source outputs before generating downstream deliverables:** Never populate a customer deck, document, or spreadsheet from a compacted chat summary alone; open the saved query output (open the saved source file) and verify every row 1:1.
 
 ### Checkpoint 3: inspect the evidence before the reply
 
-Run your customer question using the file and procedure you just saved. Before accepting a draft, ask:
+Run your customer question using the `customers/<account>.md` file and `SKILL.md` procedure you saved. Before accepting a draft, ask:
 
-> Show each material claim you plan to put in the reply, its source and date, and whether it is confirmed, provisional, or unsupported. For numerical claims, include the query or calculation. For a proposed cause, show the evidence that supports it and the alternatives you checked. Identify what remains unknown. Then draft a reply whose wording reflects those limits, and propose updates to the customer file. Leave sending and sharing for my review.
+> Show a verification table of every material claim you plan to include in the reply, its exact query or primary source, its `#date:YYYY-MM-DD` tag, and whether it is `confirmed`, `provisional`, or `unsupported`. For numerical claims, show the query or script calculation. For each proposed cause, show the supporting evidence and the alternative explanations you tested and ruled out. Then stage a concise reply draft whose wording reflects those limits, and propose exact line-item updates to `customers/<account>.md`. Leave sending and external sharing for my review.
 
-Open the source behind the main recommendation. Recalculate one important number and inspect one alternative explanation. A source that merely mentions the topic is insufficient; it must support the actual claim. If a tool was unavailable, the answer should say what could not be checked. Correct the draft, approve the verified file updates, and run another question through the same workflow. That second run tells you whether the setup is reusable.
-
-### An example from Ads: an underspending campaign
-
-An owner of a multi-location home-services business emailed to ask why a Performance Max campaign was spending so little. I gave an agent a short instruction: “Take a look at the email I received from the owner and diagnose what's going on.” The agent had access to the customer file, the email thread, a procedure for querying ad performance, and live reporting tools. The short prompt worked because those pieces were already in place.
-
-The advertiser ran paired Search and Performance Max campaigns across several metro areas. Completed jobs recorded in its customer relationship management system were sent back to Google Ads as conversion events. These events tell the advertising system which customer actions to optimize toward. In roughly four follow-up prompts, the agent found that the affected campaign's automated bidding used web quote requests as its success signal. Completed jobs and calls were recorded but excluded from its bidding goals. Web quote requests had nearly stopped firing. Daily spend had fallen to about a third of its earlier level.
-
-The account-wide check showed a sharp drop in web form conversions across multiple campaigns. That raised the possibility of a site tracking change. The available data ruled out budget as the immediate constraint. The agent did not claim that competition was responsible because it had not queried competition data.
-
-The same goal configuration appeared in several other campaigns. The proposed fix added the missing goal without immediately removing existing goals, which could have reduced the conversion volume available to bidding. The agent also caught a separate launch problem: recent completed-job uploads all had zero conversion value. The customer planned to optimize bidding for the value of completed work, so those missing values needed to be resolved first.
-
-The output was a draft reply, a linked fix-plan document, and targeted questions for the partner responsible for the upload pipeline. Each material finding had a data source. I still reviewed the diagnosis and the language before anything went to the customer. In another industry, the systems and metrics would differ. The sequence of checking context, testing explanations, and reviewing the draft would be the same.
-
-### Checks I keep in the Ads diagnostic procedure
-
-* Separate conversions used for bidding from other recorded conversions.
-* Check campaign-level goals. They can override account defaults.
-* Compare a campaign problem with account-wide patterns before assigning a cause.
-* Check upload diagnostics and conversion values when CRM data is involved.
-* Account for reporting lag and click-date attribution when discussing recent changes.
-* Inspect the effect of removing a goal before recommending that change.
-* Keep the query behind each number in the draft or its appendix.
+Open the source behind the main recommendation, check one calculation, and inspect one ruled-out alternative. Correct the draft, approve the verified updates to `customers/<account>.md`, and run a second question through the same workflow to confirm the setup is reusable.
 
 ## Match review to the cost of being wrong
 
-Internal plans need sourced numbers and causes labeled as confirmed or provisional. Customer recommendations need current evidence, a claim-to-source list, and human review. Pricing or budget changes, forecasts, policy questions, and competitor claims warrant a second reviewer.
+Not every task needs the same ceremony. Calibrate verification depth to the cost of a wrong answer:
 
-The cost of a plausible but wrong answer is concrete. A customer might change a budget, alter a rollout, or commit to a plan on the strength of it. In my Ads work, a wrong diagnosis could also prompt a bid change or a paused campaign. In a customer-facing role, the company shares the loss of trust. I try to write only claims I could explain with the underlying source open in front of me.
+<Table
+  data={{"headers": ["Risk Tier", "Typical Examples", "Required Verification Gate"], "rows": [["Tier 1: Private Exploration", "Brainstorming hypotheses, learning a new industry, organizing rough notes", "Model inference is fine; label outputs #status:unverified and do not save to customers/<account>.md."], ["Tier 2: Internal Planning", "Account plans, internal prep notes, team readouts", "Every metric traces to a query with #date:YYYY-MM-DD; causes are labeled confirmed or hypothesis."], ["Tier 3: Customer-Facing Deliverables", "Client emails, strategy docs, QBR decks, diagnostic readouts", "Full Prove loop, verification table, open the saved source file check against raw query output, human review, and staged drafts only."], ["Tier 4: High-Stakes Commitments", "Pricing/budget changes, root-cause escalations, forecasts, or contractual terms", "Tier 3 plus a second human reviewer, conservative phrasing, and projections tied to an approved forecast source."]]}}
+/>
+
+The cost of a plausible but wrong answer in customer work is concrete: a customer may reallocate budget, alter a rollout, or change a technical integration on the strength of your advice. My rule of thumb is simple: only include claims you would feel comfortable explaining to the customer's CFO with the underlying query and source record open on screen.
 
 ## Clean up a setup you already use
 
-Some errors begin in the agent's instructions or memory. A procedure might contain a sample contract value that the agent later treats as a customer's real number. A screenshot summary might sit in the customer file for months with no date. Both can emerge in a polished draft as apparent facts.
+Some apparent hallucinations begin in the agent's own workspace. The model may repeat stale or hardcoded material with confidence. I call this **context poisoning**:
 
-Before changing an established setup, keep a copy of the files and instructions that currently work. Ask the agent to inventory what it can inspect. Depending on the product, that may include project instructions, saved skills, customer files, or visible memory entries. It may have no access to other stored context. The inventory should identify that boundary explicitly.
+- A `SKILL.md` containing a hardcoded sample figure (for example, `"target payback is 6 months"` or `"baseline usage is 450 seats"`) that the agent later cites as a real customer's metric.
+- A pasted export or screenshot summary sitting in `customers/<account>.md` for months without a `#date:YYYY-MM-DD` tag.
+- Duplicate or slightly different versions of global rules scattered across `AGENTS.md`, `CLAUDE.md`, and `rules/*.md`.
 
-### Checkpoint 4: audit before archiving
+Before changing an established setup, save a backup copy of your working files. Then ask the agent to inventory what it can actually inspect.
 
-Use this prompt in the setup you want to clean up:
+### Checkpoint 4: audit for context poisoning before archiving
 
-> Inventory the instructions, skills, memory entries, and customer files you can actually inspect. Give their locations and roles. List what you cannot inspect. Flag duplicate or conflicting instructions, superseded facts, undated metrics, and customer details embedded in reusable procedures. For each proposed change, show the evidence and its likely effect. Propose what to keep, update, or archive. Make no changes until I review the proposal.
+Run this maintenance prompt monthly, or whenever your agent starts producing oddly specific unqueried numbers:
 
-Check the proposed changes against the source material. Archive superseded content outside the locations loaded by default, retain links where history matters, and update the file index. Make a small batch of changes, then rerun familiar tasks with the same source data. Compare the claims, sources, and required review steps with the earlier outputs. Restore anything whose removal caused a regression. Repeat the audit when instructions accumulate or the agent starts giving oddly specific answers.
+> Inventory the global rule files (`AGENTS.md`, `rules/*.md`), skill files (`skills/*/SKILL.md`), and customer files (`customers/*.md`) you can inspect in this workspace, and list what you cannot inspect. Audit them for context poisoning:
+> 1. Flag any hardcoded number, customer name, account ID, date, or pasted report inside a `SKILL.md`, and propose replacing it with a `<PLACEHOLDER>` or a live query script.
+> 2. Flag any metric in `customers/*.md` that is past its useful review window or missing a `#date:YYYY-MM-DD` and `[source: ...]` tag, and propose marking it `#status:stale`.
+> 3. Flag duplicate or conflicting rules across global instruction files and propose consolidating them into a single pinned file.
+> Show me a table of proposed edits and their expected effect before modifying any file.
 
-To teach this across a team, collect a few resolved customer questions with known source evidence. Have colleagues use the same questions to practice selecting context, running a procedure, and reviewing the draft. Include a case with missing data or an outdated target. Compare unsupported claims and missed checks, then improve the shared procedure. A seller should finish the exercise able to explain where the main recommendation came from.
+Archive superseded content outside the folders loaded by default, retain links where historical context matters, and rerun two or three familiar customer tasks on the same source data to confirm nothing regressed.
 
-After the first few runs, review where you still have to intervene. A missing fact may belong in the customer file. A check the agent repeatedly skips may belong in the procedure. A conclusion that nobody can verify may require access to another source or a narrower recommendation. Use those failures to decide what to change next.
-
-The home-services case changed my standard for a useful agent workflow. The short prompt was the least interesting part. The value came from current customer context, a repeatable investigation, and a draft whose important claims I could check before the customer saw it. That standard applies just as well to a renewal plan or a question about product adoption.
+When a team adopts this workflow together, the shortest prompt is the least interesting part. The durable advantage comes from readable Markdown context (`Know`), modular `SKILL.md` procedures (`Execute`), and a verification loop that pairs model judgment with deterministic evidence before a customer ever sees the draft (`Prove`).
 
 ## Further reading
 
-* [Felix Rieseberg, “How to Be More Ambitious”](https://felixrieseberg.com/how-to-be-more-ambitious-a-tutorial-for-humans-with-models/)
-* [“Lost in the Middle”](https://arxiv.org/abs/2307.03172)
-* [Chroma, “Context Rot”](https://research.trychroma.com/context-rot)
-* [Anthropic, “Effective Context Engineering for AI Agents”](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents)
-* [Google Ads, conversion value best practices](https://support.google.com/google-ads/answer/14791574)
+- [Felix Rieseberg, "How to Be More Ambitious: A Tutorial for Humans with Models"](https://felixrieseberg.com/how-to-be-more-ambitious-a-tutorial-for-humans-with-models/)
+- [Nelson F. Liu et al., "Lost in the Middle: How Language Models Use Long Contexts"](https://arxiv.org/abs/2307.03172)
+- [Chroma Research, "Context Rot: How Increasing Input Tokens Impacts LLM Performance"](https://research.trychroma.com/context-rot)
+- [Anthropic Engineering, "Effective Context Engineering for AI Agents"](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents)
 
 ## Acknowledgements
 
-*Thanks to: Riccardo Baudo, Max Cederkall, Yongbaek Cho, Michael Deane, Eric Geibel, Shriver Gilroy, Harry Hobart, Professor Thomas Y. Lee, Zac Mar, Tom Mulder for helping shape this essay.*
+Thanks to the colleagues, mentors, and readers whose feedback and technical reviews helped shape this essay.
 
-**Originally published: 2026-10-02**
+Originally published: 2026-10-02 | Updated: 2026-10-21

@@ -110,6 +110,15 @@
   overflow: hidden;
 }
 
+.agentic-post .post-table-wide {
+  overflow-x: auto;
+}
+
+.agentic-post .post-table-wide table {
+  min-width: 760px;
+  table-layout: auto;
+}
+
 .agentic-post table {
   display: table;
   width: 100%;
@@ -142,6 +151,7 @@
   .agentic-post h2 { font-size: 1.45rem; margin-top: 2.75rem; }
   .agentic-post h3 { font-size: 1.15rem; }
   .agentic-post .post-table { border: 0; overflow: visible; }
+  .agentic-post .post-table-wide table { min-width: 0; }
   .agentic-post table, .agentic-post tbody { display: block; }
   .agentic-post thead {
     position: absolute;

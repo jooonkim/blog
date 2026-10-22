@@ -4,7 +4,7 @@ export default function Table({
   data: { headers: string[]; rows: string[][] };
 }) {
   return (
-    <div className="post-table">
+    <div className={`post-table${data.headers.length > 4 ? ' post-table-wide' : ''}`}>
       <table>
         <thead>
           <tr>
