@@ -48,8 +48,6 @@ I've explored this while leading AI initiatives for sales organizations at Googl
 - **Execute:** Give the agent written steps for work you repeat.
 - **Prove:** Check important claims against current sources before a customer sees them.
 
-The steps work together. A procedure needs customer context. A diagnosis needs live evidence. Verified findings should update the customer record.
-
 ## Give the agent less to read, and better material
 
 Long prompts can bury useful facts. Put May and September revenue targets in the same prompt, and the agent may treat both as current. An undated report can look current too.
@@ -131,7 +129,7 @@ To follow along, pick one customer and a real question you want to investigate. 
 
 I keep one editable Markdown file per customer (`customers/<account>.md`). It holds the current working picture, not every conversation. Aim for 50 to 150 lines.
 
-At the top, a one-sentence `description:` tells the agent when to open the file without loading every account at once.
+At the top, a one-sentence `description` field tells the agent when to open the file without loading every account at once.
 
 Capture the business goal behind each request. A product question may really be about branch capacity, job margins, or repeat business. Give every important fact a source and date (`#direct`, `#date:YYYY-MM-DD`, `[source: ...]`). Here's a fictional example:
 
@@ -144,12 +142,12 @@ last_updated: 2026-10-01
 ## 1. The customer's customers
 - End buyer: Mid-market operations teams purchasing workflow automation to reduce manual ticket routing.
 - Channel and branch dynamics: 12 regional branches sell and implement locally; corporate HQ controls pricing tiers and renewal terms.
-- Margin driver: Annual enterprise subscriptions (78% gross margin) and multi-year implementation renewals.
+- Revenue model: Annual enterprise subscriptions and multi-year implementation renewals.
 
-## 2. Stakeholders and unit economics
+## 2. Stakeholders and renewal goal
 - VP of Operations (Executive Sponsor): Prioritizes branch adoption rate and time-to-first-workflow [source: Q3 QBR call, #direct, #date:2026-09-14].
 - RevOps Lead (Technical Owner): Owns CRM-to-product telemetry sync and seat provisioning.
-- Unit economics: $18,000 average annual contract value; target payback under 9 months; renewal threshold requires >=70% active seat utilization.
+- Renewal threshold: At least 70% active seat utilization [source: renewal agreement, #date:2026-09-28].
 
 ## 3. Verified footprint
 - Active deployment: 420 provisioned seats across 12 branches; 310 monthly active seats as of #date:2026-09-28 [source: queries/active_seats_by_branch.sql].
@@ -165,11 +163,11 @@ When a decision changes, update the line and link to the old source if needed. M
 
 ### Checkpoint 1: make the customer file retrievable
 
-Give your agent a recent customer email thread and the notes or records you trust. Use this prompt:
+Give your agent a recent customer email thread and notes you trust, then use this prompt:
 
 > Using these sources, draft `customers/<account>.md` in the format above. Include a one-sentence description, last-updated date, customer goals and stakeholders, verified footprint, and dated decision log. Add a source and date to each important fact. Flag missing or conflicting information. Show me the file before saving it.
 
-Correct and save the file. If your agent does not index file descriptions, add its path and description to an index. In a fresh chat, ask for the customer's current goal and latest agreed decision, with sources. Check both.
+Review and save the file. If your agent cannot find it from its description, add it to an index. In a fresh chat, ask for the customer's current goal and latest decision, with sources.
 
 ### What to carry into a fresh chat
 
@@ -198,7 +196,7 @@ date: 2026-10-02
 
 A **skill** is a written procedure in `skills/<workflow-name>/SKILL.md`. It can include query scripts and templates in the same folder.
 
-Where supported, a short `description:` at the top tells the agent when to load it: "Use when... Don't use for..."
+Where supported, add a short `description` field that tells the agent when to load it: "Use when... Don't use for..."
 
 The first four skills I recommend building for a customer-facing team cover four recurring jobs:
 
@@ -243,11 +241,11 @@ Notice Section 3. If your team has a sales or advisory method, put four or five 
 
 ### Checkpoint 2: save one procedure you can reuse
 
-Choose a workflow connected to your customer question, such as preparing a renewal review or diagnosing a change in product usage. Ask your agent:
+Pick a task you do often, such as a renewal review or usage diagnosis, then use this prompt:
 
 > Draft a reusable `SKILL.md` for this workflow, using the example above. Say when to use it, which customer file and sources to open, what queries and calculations to run, and what to draft for my review. Use `<PLACEHOLDERS>` for customer-specific values. Show me the file before saving it.
 
-Compare the steps with how you do the work. Save the file, then start a fresh chat with a task that should trigger it. Ask which skill the agent loaded and which checks it completed. Fix any skipped or unclear step.
+Compare the steps with how you work. Save the skill, test it in a fresh chat, and ask which skill the agent loaded and which checks it ran. Fix anything it skipped.
 
 ## Prove: investigate before drafting an explanation
 
@@ -290,7 +288,7 @@ In the fictional account above, suppose monthly active users in a region fell fr
 
 ### Checks to keep in a diagnostic procedure
 
-Keep these checks in the diagnostic skill:
+The sequence above shows one investigation. Keep these checks in the diagnostic skill so the agent repeats them next time:
 
 - **Check actual activity:** An `ENABLED` flag may hide a paused workspace. Check recent usage before recommending a change.
 - **Find the events that count:** A system may log many events but use only a few for routing, automation, or billing.
@@ -302,11 +300,11 @@ Keep these checks in the diagnostic skill:
 
 ### Checkpoint 3: inspect the evidence before the reply
 
-Run your customer question using the `customers/<account>.md` file and `SKILL.md` procedure you saved. Before accepting a draft, ask:
+Run the diagnosis with the customer file and skill you saved, then use this prompt:
 
 > Before drafting the reply, list each important claim, its source and date, and whether it is confirmed, provisional, or unsupported. Show calculations for numbers and the alternatives you checked for each proposed cause. Then draft a short reply and suggest updates to `customers/<account>.md`. Leave sending and sharing for my review.
 
-Open the source behind the main recommendation. Check one calculation and one ruled-out alternative. Correct the draft and approve any customer-file updates.
+Open the source behind the main recommendation. Check one calculation and one ruled-out cause, then review the reply and proposed customer-file updates.
 
 ## Match review to the cost of being wrong
 
@@ -339,7 +337,7 @@ Back up the working files, then ask the agent what it can inspect.
 
 ### Checkpoint 4: audit for context poisoning before archiving
 
-Run this monthly, or when an agent produces oddly specific numbers it never queried:
+Run this monthly, or when the agent cites a number you cannot trace:
 
 > Inventory the global rule files (`AGENTS.md`, `rules/*.md`), skill files (`skills/*/SKILL.md`), and customer files (`customers/*.md`) you can inspect in this workspace, and list what you cannot inspect. Audit them for context poisoning:
 > 1. Flag any hardcoded number, customer name, account ID, date, or pasted report inside a `SKILL.md`, and propose replacing it with a `<PLACEHOLDER>` or a live query script.
@@ -347,7 +345,7 @@ Run this monthly, or when an agent produces oddly specific numbers it never quer
 > 3. Flag duplicate or conflicting rules across global instruction files and propose consolidating them into a single pinned file.
 > Show me a table of proposed edits and their expected effect before modifying any file.
 
-Archive old content outside the default folders. Keep links if the history matters, then rerun a few familiar tasks to check the setup.
+Move old material out of the default folders. Keep links if the history matters, then rerun a familiar task.
 
 Start with one customer file and one recurring task. If the agent can find the right context, follow the procedure, and show the evidence behind its advice, you have a workflow worth reusing.
 
